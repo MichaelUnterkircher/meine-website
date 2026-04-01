@@ -34,6 +34,21 @@
       border-radius: 15px;
       margin-top: 15px;
     }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #2e7d32;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1b5e20;
+    }
   </style>
 </head>
 
@@ -42,10 +57,20 @@
   <div class="container">
     <h1>Abschussliste Jagdrevier Prad 2026</h1>
 
-    <!-- BILD -->
     <img src="491438944_10226782024328158_4391837002889702168_n.jpg" alt="Bild">
 
+    <br>
+
+    <button onclick="zeigeText()">Revier</button>
+
+    <p id="text"></p>
   </div>
+
+  <script>
+    function zeigeText() {
+      document.getElementById("text").innerText = "Informationen zum Revier werden hier angezeigt.";
+    }
+  </script>
 
 </body>
 </html>
