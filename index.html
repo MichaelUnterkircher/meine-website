@@ -52,11 +52,18 @@ table {
 th,td {
   border:1px solid #ccc;
   padding:5px;
+  text-align:center;
 }
 
 th {
   background:#2e7d32;
   color:white;
+}
+
+.rot {
+  background:red;
+  color:white;
+  cursor:pointer;
 }
 
 input {
@@ -102,7 +109,14 @@ input {
 
   <table id="tabelle">
     <tr>
-      <th>Name</th><th>Wild</th><th>kg</th><th>Ort</th><th>Zeit</th><th>Eingelagert</th><th>Verwendung</th>
+      <th>Name</th>
+      <th>Wild</th>
+      <th>kg</th>
+      <th>Ort</th>
+      <th>Zeit</th>
+      <th>Eingelagert</th>
+      <th>Entnommen</th>
+      <th>Verwendung</th>
     </tr>
   </table>
 </div>
@@ -279,6 +293,7 @@ function nextVerwendung() {
 
 function finish(v) {
   e.verwendung = v;
+  e.entnommen = ""; // NEU
   daten.push(e);
   speichern();
   anzeigen();
@@ -286,14 +301,23 @@ function finish(v) {
   zeigeSeite("revier");
 }
 
+function setEntnommen(index) {
+  let datum = prompt("Datum Entnahme eingeben (YYYY-MM-DD):");
+  if(datum) {
+    daten[index].entnommen = datum;
+    speichern();
+    anzeigen();
+  }
+}
+
 function anzeigen() {
   let t = document.getElementById("tabelle");
   t.innerHTML = `
   <tr>
-    <th>Name</th><th>Wild</th><th>kg</th><th>Ort</th><th>Zeit</th><th>Eingelagert</th><th>Verwendung</th>
+    <th>Name</th><th>Wild</th><th>kg</th><th>Ort</th><th>Zeit</th><th>Eingelagert</th><th>Entnommen</th><th>Verwendung</th>
   </tr>`;
 
-  daten.forEach(d => {
+  daten.forEach((d, i) => {
     let r = t.insertRow();
     r.insertCell(0).innerText = d.name;
     r.insertCell(1).innerText = d.wild;
@@ -301,11 +325,25 @@ function anzeigen() {
     r.insertCell(3).innerText = d.ort;
     r.insertCell(4).innerText = d.zeit;
     r.insertCell(5).innerText = d.datum;
-    r.insertCell(6).innerText = d.verwendung;
+
+    let ent = r.insertCell(6);
+    if(!d.entnommen) {
+      ent.innerHTML = "Entnommen";
+      ent.className = "rot";
+      ent.onclick = () => setEntnommen(i);
+    } else {
+      ent.innerText = d.entnommen;
+    }
+
+    r.insertCell(7).innerText = d.verwendung;
   });
 }
 
 anzeigen();
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
