@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Abschussliste</title>
 
-  <!-- Für Handy -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -14,16 +13,17 @@
       background: #2e7d32;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
+      padding: 10px;
     }
 
     .container {
       background: white;
       padding: 20px;
       border-radius: 15px;
-      width: 90%;
-      max-width: 400px;
+      width: 100%;
+      max-width: 500px;
       text-align: center;
     }
 
@@ -38,9 +38,9 @@
     }
 
     img {
-      width: 200px;
+      width: 180px;
       border-radius: 15px;
-      margin: 15px 0;
+      margin: 10px 0;
     }
 
     .button-container {
@@ -66,6 +66,32 @@
     button:hover {
       background: #1b5e20;
     }
+
+    .hidden {
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+
+    th {
+      background: #2e7d32;
+      color: white;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -75,16 +101,49 @@
   <h2>Abschussliste Jagdrevier Prad</h2>
   <div class="info">Zahlencode: 1024</div>
 
-  <!-- LOGO -->
   <img src="491438944_10226782024328158_4391837002889702168_n.jpg" alt="Logo">
 
-  <!-- BUTTONS NEBENEINANDER -->
   <div class="button-container">
-    <button onclick="alert('Park gewählt')">Park</button>
-    <button onclick="alert('Revier gewählt')">Revier</button>
+    <button onclick="zeigePark()">Park</button>
+    <button onclick="zeigeRevier()">Revier</button>
+  </div>
+
+  <!-- Park Nachricht -->
+  <div id="park" class="message hidden">
+    noch nicht aktiv
+  </div>
+
+  <!-- Tabelle -->
+  <div id="revier" class="hidden">
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Wildart</th>
+        <th>Gewicht</th>
+        <th>Ort</th>
+        <th>Zeit</th>
+        <th>Eingelagert</th>
+        <th>Entnommen</th>
+        <th>Eigengebrauch</th>
+        <th>Verkauf</th>
+        <th>Abfall</th>
+      </tr>
+    </table>
   </div>
 
 </div>
+
+<script>
+function zeigePark() {
+  document.getElementById("park").classList.remove("hidden");
+  document.getElementById("revier").classList.add("hidden");
+}
+
+function zeigeRevier() {
+  document.getElementById("revier").classList.remove("hidden");
+  document.getElementById("park").classList.add("hidden");
+}
+</script>
 
 </body>
 </html>
