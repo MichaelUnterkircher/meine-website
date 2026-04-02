@@ -27,48 +27,39 @@
       text-align: center;
     }
 
-    h2 {
-      margin-bottom: 5px;
-    }
-
-    .info {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 15px;
-    }
-
-    img {
-      width: 180px;
-      border-radius: 15px;
-      margin: 10px 0;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .button-container button {
-      flex: 1;
+    .hidden {
+      display: none;
     }
 
     button {
       padding: 12px;
+      margin: 5px;
       border: none;
       border-radius: 10px;
       background: #2e7d32;
       color: white;
       font-size: 16px;
       cursor: pointer;
+      width: 100%;
     }
 
     button:hover {
       background: #1b5e20;
     }
 
-    .hidden {
-      display: none;
+    .button-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .button-container button {
+      flex: 1;
+    }
+
+    img {
+      width: 180px;
+      border-radius: 15px;
+      margin: 10px 0;
     }
 
     table {
@@ -87,34 +78,39 @@
       background: #2e7d32;
       color: white;
     }
-
-    .message {
-      margin-top: 15px;
-      font-weight: bold;
-    }
   </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h2>Abschussliste Jagdrevier Prad</h2>
-  <div class="info">Zahlencode: 1024</div>
 
-  <img src="491438944_10226782024328158_4391837002889702168_n.jpg" alt="Logo">
+  <!-- 🏠 STARTSEITE -->
+  <div id="start">
+    <h2>Abschussliste Jagdrevier Prad</h2>
+    <div>Zahlencode: 1024</div>
 
-  <div class="button-container">
-    <button onclick="zeigePark()">Park</button>
-    <button onclick="zeigeRevier()">Revier</button>
+    <img src="491438944_10226782024328158_4391837002889702168_n.jpg">
+
+    <div class="button-container">
+      <button onclick="zeigeSeite('park')">Park</button>
+      <button onclick="zeigeSeite('revier')">Revier</button>
+    </div>
   </div>
 
-  <!-- Park Nachricht -->
-  <div id="park" class="message hidden">
-    noch nicht aktiv
+  <!-- 🌲 PARK SEITE -->
+  <div id="park" class="hidden">
+    <h2>Park</h2>
+
+    <p>noch nicht aktiv</p>
+
+    <button onclick="zeigeSeite('start')">⬅ Zurück</button>
   </div>
 
-  <!-- Tabelle -->
+  <!-- 📊 REVIER SEITE -->
   <div id="revier" class="hidden">
+    <h2>Revier</h2>
+
     <table>
       <tr>
         <th>Name</th>
@@ -129,19 +125,19 @@
         <th>Abfall</th>
       </tr>
     </table>
+
+    <button onclick="zeigeSeite('start')">⬅ Zurück</button>
   </div>
 
 </div>
 
 <script>
-function zeigePark() {
-  document.getElementById("park").classList.remove("hidden");
-  document.getElementById("revier").classList.add("hidden");
-}
-
-function zeigeRevier() {
-  document.getElementById("revier").classList.remove("hidden");
+function zeigeSeite(seite) {
+  document.getElementById("start").classList.add("hidden");
   document.getElementById("park").classList.add("hidden");
+  document.getElementById("revier").classList.add("hidden");
+
+  document.getElementById(seite).classList.remove("hidden");
 }
 </script>
 
