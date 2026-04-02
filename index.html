@@ -1,143 +1,179 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Abschussliste</title>
+<meta charset="UTF-8">
+<title>Abschussliste</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #2e7d32;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 10px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #2e7d32;
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
 
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      width: 100%;
-      max-width: 500px;
-      text-align: center;
-    }
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
 
-    .hidden {
-      display: none;
-    }
+.hidden { display: none; }
 
-    button {
-      padding: 12px;
-      margin: 5px;
-      border: none;
-      border-radius: 10px;
-      background: #2e7d32;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      width: 100%;
-    }
+button {
+  padding: 12px;
+  margin: 5px;
+  border: none;
+  border-radius: 10px;
+  background: #2e7d32;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+}
 
-    button:hover {
-      background: #1b5e20;
-    }
+button:hover {
+  background: #1b5e20;
+}
 
-    .button-container {
-      display: flex;
-      gap: 10px;
-    }
+.button-container {
+  display: flex;
+  gap: 10px;
+}
 
-    .button-container button {
-      flex: 1;
-    }
+.button-container button {
+  flex: 1;
+}
 
-    img {
-      width: 180px;
-      border-radius: 15px;
-      margin: 10px 0;
-    }
+img {
+  width: 180px;
+  border-radius: 15px;
+  margin: 10px 0;
+}
 
-    table {
-      width: 100%;
-      margin-top: 15px;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
+table {
+  width: 100%;
+  margin-top: 15px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 5px;
-    }
+th, td {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
 
-    th {
-      background: #2e7d32;
-      color: white;
-    }
-  </style>
+th {
+  background: #2e7d32;
+  color: white;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- 🏠 STARTSEITE -->
-  <div id="start">
-    <h2>Abschussliste Jagdrevier Prad</h2>
-    <div>Zahlencode: 1024</div>
+<!-- START -->
+<div id="start">
+  <h2>Abschussliste Jagdrevier Prad</h2>
+  <div>Zahlencode: 1024</div>
 
-    <img src="491438944_10226782024328158_4391837002889702168_n.jpg">
+  <img src="491438944_10226782024328158_4391837002889702168_n.jpg">
 
-    <div class="button-container">
-      <button onclick="zeigeSeite('park')">Park</button>
-      <button onclick="zeigeSeite('revier')">Revier</button>
-    </div>
+  <div class="button-container">
+    <button onclick="zeigeSeite('park')">Park</button>
+    <button onclick="zeigeSeite('revier')">Revier</button>
   </div>
+</div>
 
-  <!-- 🌲 PARK SEITE -->
-  <div id="park" class="hidden">
-    <h2>Park</h2>
+<!-- PARK -->
+<div id="park" class="hidden">
+  <h2>Park</h2>
+  <p>noch nicht aktiv</p>
+  <button onclick="zeigeSeite('start')">⬅ Zurück</button>
+</div>
 
-    <p>noch nicht aktiv</p>
+<!-- REVIER -->
+<div id="revier" class="hidden">
+  <h2>Revier</h2>
 
-    <button onclick="zeigeSeite('start')">⬅ Zurück</button>
-  </div>
+  <button onclick="zeigeSeite('eingabeName')">➕ Neuer Eintrag</button>
 
-  <!-- 📊 REVIER SEITE -->
-  <div id="revier" class="hidden">
-    <h2>Revier</h2>
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Wildart</th>
+    </tr>
+  </table>
 
-    <table>
-      <tr>
-        <th>Name</th>
-        <th>Wildart</th>
-        <th>Gewicht</th>
-        <th>Ort</th>
-        <th>Zeit</th>
-        <th>Eingelagert</th>
-        <th>Entnommen</th>
-        <th>Eigengebrauch</th>
-        <th>Verkauf</th>
-        <th>Abfall</th>
-      </tr>
-    </table>
+  <button onclick="zeigeSeite('start')">⬅ Zurück</button>
+</div>
 
-    <button onclick="zeigeSeite('start')">⬅ Zurück</button>
-  </div>
+<!-- SCHRITT 1: NAME -->
+<div id="eingabeName" class="hidden">
+  <h2>Name Erleger</h2>
+
+  <input type="text" id="name">
+
+  <button onclick="weiterZuWildart()">Weiter</button>
+</div>
+
+<!-- SCHRITT 2: WILDART -->
+<div id="eingabeWildart" class="hidden">
+  <h2>Wildart</h2>
+
+  <button onclick="setWild('Reh')">Reh</button>
+  <button onclick="setWild('Hirsch')">Hirsch</button>
+  <button onclick="setWild('Gams')">Gams</button>
+  <button onclick="setWild('Fuchs')">Fuchs</button>
+
+</div>
 
 </div>
 
 <script>
-function zeigeSeite(seite) {
-  document.getElementById("start").classList.add("hidden");
-  document.getElementById("park").classList.add("hidden");
-  document.getElementById("revier").classList.add("hidden");
+let eintrag = {};
 
+function zeigeSeite(seite) {
+  let seiten = ["start","park","revier","eingabeName","eingabeWildart"];
+  seiten.forEach(s => document.getElementById(s).classList.add("hidden"));
   document.getElementById(seite).classList.remove("hidden");
+}
+
+function weiterZuWildart() {
+  let name = document.getElementById("name").value;
+  if(name === "") {
+    alert("Bitte Name eingeben");
+    return;
+  }
+
+  eintrag.name = name;
+  zeigeSeite("eingabeWildart");
+}
+
+function setWild(wildart) {
+  eintrag.wildart = wildart;
+
+  alert("Gespeichert:\n" + eintrag.name + " - " + eintrag.wildart);
+
+  zeigeSeite("revier");
 }
 </script>
 
