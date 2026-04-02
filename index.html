@@ -51,7 +51,7 @@ table {
   width:100%;
   border-collapse:collapse;
   font-size:12px;
-  min-width:700px;
+  min-width:850px;
 }
 
 th,td {
@@ -65,7 +65,7 @@ th {
   color:white;
 }
 
-/* NEU: Entnommen Design */
+/* Entnommen */
 .entnommen-btn {
   background:red;
   color:white;
@@ -77,6 +77,32 @@ th {
 
 .entnommen-done {
   background:#e8f5e9;
+}
+
+/* Abfall */
+.abfall-btn {
+  background:blue;
+  color:white;
+  border-radius:6px;
+  padding:4px 8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.abfall-ja {
+  background:#4caf50;
+  color:white;
+  cursor:pointer;
+}
+
+.abfall-nein {
+  background:#f44336;
+  color:white;
+  cursor:pointer;
+}
+
+.abfall-grau {
+  background:#ccc;
 }
 
 input {
@@ -121,22 +147,11 @@ input {
   </div>
 
   <div class="table-wrapper">
-    <table id="tabelle">
-      <tr>
-        <th>Name</th>
-        <th>Wild</th>
-        <th>kg</th>
-        <th>Ort</th>
-        <th>Schusszeit</th>
-        <th>Eingelagert</th>
-        <th>Entnommen</th>
-        <th>Verwendung</th>
-      </tr>
-    </table>
+    <table id="tabelle"></table>
   </div>
 </div>
 
-<!-- NAME -->
+<!-- Eingabeseiten bleiben gleich -->
 <div id="name" class="hidden">
   <h3>Name Erleger</h3>
   <input id="inputName">
@@ -144,7 +159,6 @@ input {
   <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
-<!-- WILD -->
 <div id="wild" class="hidden">
   <h3>Wildart</h3>
   <button onclick="zeigeSeite('reh')">Reh</button>
@@ -156,7 +170,6 @@ input {
   <button onclick="zeigeSeite('name')">⬅ Zurück</button>
 </div>
 
-<!-- REH -->
 <div id="reh" class="hidden">
   <h3>Rehwild</h3>
   <button onclick="setWild('T-Bock')">T-Bock</button>
@@ -167,7 +180,6 @@ input {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- HIRSCH -->
 <div id="hirsch" class="hidden">
   <h3>Rotwild</h3>
   <button onclick="setWild('T-Hirsch')">T-Hirsch</button>
@@ -178,7 +190,6 @@ input {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- ANDERE -->
 <div id="andere" class="hidden">
   <h3>Andere Wildart</h3>
   <input id="andereInput">
@@ -186,7 +197,6 @@ input {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- GEWICHT -->
 <div id="gewicht" class="hidden">
   <h3>Gewicht (kg)</h3>
   <input id="inputGewicht" type="number">
@@ -194,7 +204,6 @@ input {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- ORT -->
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
   <input id="inputOrt">
@@ -202,7 +211,6 @@ input {
   <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
-<!-- ZEIT -->
 <div id="zeit" class="hidden">
   <h3>Schusszeit</h3>
   <input type="time" id="inputZeit">
@@ -210,7 +218,6 @@ input {
   <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
-<!-- DATUM -->
 <div id="datum" class="hidden">
   <h3>Eingelagert Datum</h3>
   <input type="date" id="inputDatum">
@@ -218,7 +225,6 @@ input {
   <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
 </div>
 
-<!-- VERWENDUNG -->
 <div id="verwendung" class="hidden">
   <h3>Verwendung</h3>
   <button onclick="finish('Eigengebrauch')">Eigengebrauch</button>
@@ -232,131 +238,135 @@ input {
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 
-function speichern() {
-  localStorage.setItem("daten", JSON.stringify(daten));
-}
+function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
 
-function zeigeSeite(id) {
-  document.querySelectorAll("div[id]").forEach(d => d.classList.add("hidden"));
+function zeigeSeite(id){
+  document.querySelectorAll("div[id]").forEach(d=>d.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
 }
 
-function nextWild() {
-  let name = document.getElementById("inputName").value;
-  if(name.trim() === "") {
-    alert("Bitte Name eingeben!");
-    return;
-  }
-  e.name = name;
-  zeigeSeite("wild");
+function nextWild(){
+  let v=inputName.value.trim();
+  if(!v) return alert("Bitte Name eingeben!");
+  e.name=v; zeigeSeite("wild");
 }
 
-function setWild(w) {
-  e.wild = w;
-  zeigeSeite("gewicht");
+function setWild(w){ e.wild=w; zeigeSeite("gewicht"); }
+
+function setAndere(){
+  let v=andereInput.value.trim();
+  if(!v) return alert("Bitte Wildart eingeben!");
+  e.wild=v; zeigeSeite("gewicht");
 }
 
-function setAndere() {
-  let w = document.getElementById("andereInput").value;
-  if(w.trim() === "") {
-    alert("Bitte Wildart eingeben!");
-    return;
-  }
-  e.wild = w;
-  zeigeSeite("gewicht");
+function nextOrt(){
+  let v=inputGewicht.value;
+  if(!v||v<=0) return alert("Bitte gültiges Gewicht!");
+  e.gewicht=v; zeigeSeite("ort");
 }
 
-function nextOrt() {
-  let g = document.getElementById("inputGewicht").value;
-  if(g === "" || g <= 0) {
-    alert("Bitte gültiges Gewicht eingeben!");
-    return;
-  }
-  e.gewicht = g;
-  zeigeSeite("ort");
+function nextZeit(){
+  let v=inputOrt.value.trim();
+  if(!v) return alert("Bitte Ort eingeben!");
+  e.ort=v; zeigeSeite("zeit");
 }
 
-function nextZeit() {
-  let o = document.getElementById("inputOrt").value;
-  if(o.trim() === "") {
-    alert("Bitte Ort eingeben!");
-    return;
-  }
-  e.ort = o;
-  zeigeSeite("zeit");
+function nextDatum(){
+  let v=inputZeit.value;
+  if(!v) return alert("Bitte Schusszeit!");
+  e.zeit=v; zeigeSeite("datum");
 }
 
-function nextDatum() {
-  let z = document.getElementById("inputZeit").value;
-  if(z === "") {
-    alert("Bitte Schusszeit auswählen!");
-    return;
-  }
-  e.zeit = z;
-  zeigeSeite("datum");
+function nextVerwendung(){
+  let v=inputDatum.value;
+  if(!v) return alert("Bitte Datum!");
+  e.datum=v; zeigeSeite("verwendung");
 }
 
-function nextVerwendung() {
-  let d = document.getElementById("inputDatum").value;
-  if(d === "") {
-    alert("Bitte Datum auswählen!");
-    return;
-  }
-  e.datum = d;
-  zeigeSeite("verwendung");
-}
-
-function finish(v) {
-  e.verwendung = v;
-  e.entnommen = "";
+function finish(v){
+  e.verwendung=v;
+  e.entnommen="";
+  e.abfall=null;
   daten.push(e);
-  speichern();
-  anzeigen();
-  e = {};
+  speichern(); anzeigen(); e={};
   zeigeSeite("revier");
 }
 
-function openDate(index) {
-  document.getElementById("date"+index).showPicker();
+function openDate(i){
+  document.getElementById("date"+i).showPicker();
 }
 
-function setEntnommen(index, value) {
-  if(value) {
-    daten[index].entnommen = value;
-    speichern();
-    anzeigen();
+function setEntnommen(i,val){
+  if(val){ daten[i].entnommen=val; speichern(); anzeigen(); }
+}
+
+/* ABFALL LOGIK */
+function handleAbfall(i){
+  let benutzt=confirm("Abfallzelle benutzt?");
+  if(!benutzt){
+    daten[i].abfall="nein";
+  } else {
+    let bezahlt=confirm("Bezahlt?");
+    daten[i].abfall = bezahlt ? "bezahlt" : "offen";
+  }
+  speichern(); anzeigen();
+}
+
+function toggleBezahlt(i){
+  if(daten[i].abfall==="offen"){
+    if(confirm("Jetzt als bezahlt markieren?")){
+      daten[i].abfall="bezahlt";
+      speichern(); anzeigen();
+    }
   }
 }
 
-function anzeigen() {
-  let t = document.getElementById("tabelle");
-  t.innerHTML = `
+function anzeigen(){
+  let t=document.getElementById("tabelle");
+  t.innerHTML=`
   <tr>
-    <th>Name</th><th>Wild</th><th>kg</th><th>Ort</th><th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th><th>Verwendung</th>
-  </tr>`;
+  <th>Name</th><th>Wild</th><th>kg</th><th>Ort</th>
+  <th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th>
+  <th>Verwendung</th><th>Abfall</th></tr>`;
 
-  daten.forEach((d, i) => {
-    let r = t.insertRow();
-    r.insertCell(0).innerText = d.name;
-    r.insertCell(1).innerText = d.wild;
-    r.insertCell(2).innerText = d.gewicht;
-    r.insertCell(3).innerText = d.ort;
-    r.insertCell(4).innerText = d.zeit;
-    r.insertCell(5).innerText = d.datum;
+  daten.forEach((d,i)=>{
+    let r=t.insertRow();
+    r.insertCell(0).innerText=d.name;
+    r.insertCell(1).innerText=d.wild;
+    r.insertCell(2).innerText=d.gewicht;
+    r.insertCell(3).innerText=d.ort;
+    r.insertCell(4).innerText=d.zeit;
+    r.insertCell(5).innerText=d.datum;
 
-    let ent = r.insertCell(6);
-
-    if(!d.entnommen) {
-      ent.innerHTML = `
-        <span class="entnommen-btn" onclick="openDate(${i})">+</span>
-        <input type="date" id="date${i}" style="display:none" onchange="setEntnommen(${i}, this.value)">
-      `;
+    let ent=r.insertCell(6);
+    if(!d.entnommen){
+      ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
+      <input type="date" id="date${i}" style="display:none" onchange="setEntnommen(${i},this.value)">`;
     } else {
-      ent.innerText = d.entnommen;
-      ent.className = "entnommen-done";
+      ent.innerText=d.entnommen;
+      ent.className="entnommen-done";
     }
 
-    r.insertCell(7).innerText = d.verwendung;
+    r.insertCell(7).innerText=d.verwendung;
+
+    let ab=r.insertCell(8);
+
+    if(d.abfall===null){
+      ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
+    }
+    else if(d.abfall==="nein"){
+      ab.innerText="Nein";
+      ab.className="abfall-grau";
+    }
+    else if(d.abfall==="bezahlt"){
+      ab.innerText="Ja";
+      ab.className="abfall-ja";
+    }
+    else if(d.abfall==="offen"){
+      ab.innerText="Nein";
+      ab.className="abfall-nein";
+      ab.onclick=()=>toggleBezahlt(i);
+    }
   });
 }
 
