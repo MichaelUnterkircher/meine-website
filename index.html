@@ -50,6 +50,13 @@ button:hover {
   background: #1b5e20;
 }
 
+img {
+  width: 180px;
+  border-radius: 15px;
+  margin: 10px auto;
+  display: block;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -82,8 +89,11 @@ input {
 
 <!-- START -->
 <div id="start">
-  <h2>Abschussliste Jagdrevier Prad</h2>
-  <div>Zahlencode: 1024</div>
+  <h2 style="text-align:center;">Abschussliste Jagdrevier Prad</h2>
+  <div style="text-align:center;">Zahlencode: 1024</div>
+
+  <!-- LOGO -->
+  <img src="491438944_10226782024328158_4391837002889702168_n.jpg" alt="Logo">
 
   <div class="topbar">
     <button onclick="zeigeSeite('park')">Park</button>
@@ -110,7 +120,7 @@ input {
     <tr>
       <th>Name</th>
       <th>Wildart</th>
-      <th>Aktion</th>
+      <th>Bearbeiten</th>
     </tr>
   </table>
 
@@ -183,12 +193,11 @@ function setWild(wildart) {
 function anzeigen() {
   let tabelle = document.getElementById("tabelle");
 
-  // alte Zeilen löschen
   tabelle.innerHTML = `
     <tr>
       <th>Name</th>
       <th>Wildart</th>
-      <th>Aktion</th>
+      <th>Bearbeiten</th>
     </tr>
   `;
 
@@ -201,15 +210,8 @@ function anzeigen() {
     let aktion = row.insertCell(2);
     aktion.innerHTML = `
       <button onclick="bearbeiten(${index})">✏️</button>
-      <button onclick="loeschen(${index})">❌</button>
     `;
   });
-}
-
-function loeschen(index) {
-  eintraege.splice(index, 1);
-  speichernLocal();
-  anzeigen();
 }
 
 function bearbeiten(index) {
@@ -221,12 +223,7 @@ function bearbeiten(index) {
   zeigeSeite("eingabeName");
 }
 
-// beim Laden anzeigen
 anzeigen();
-</script>
-
-</body>
-</html>
 </script>
 
 </body>
