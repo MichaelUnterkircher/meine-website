@@ -37,24 +37,17 @@ body {
 }
 
 button {
-  padding: 12px;
+  padding: 10px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #2e7d32;
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
 }
 
 button:hover {
   background: #1b5e20;
-}
-
-img {
-  width: 180px;
-  border-radius: 15px;
-  margin: 10px auto;
-  display: block;
 }
 
 table {
@@ -65,8 +58,7 @@ table {
 
 th, td {
   border: 1px solid #ccc;
-  padding: 6px;
-  text-align: left;
+  padding: 5px;
 }
 
 th {
@@ -76,11 +68,10 @@ th {
 
 input {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   margin-top: 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-size: 16px;
 }
 </style>
 </head>
@@ -91,10 +82,8 @@ input {
 
 <!-- START -->
 <div id="start">
-  <h2 style="text-align:center;">Abschussliste Jagdrevier Prad</h2>
-  <div style="text-align:center;">Zahlencode: 1024</div>
-
-  <img src="491438944_10226782024328158_4391837002889702168_n.jpg">
+  <h2>Abschussliste Jagdrevier Prad</h2>
+  <div>Zahlencode: 1024</div>
 
   <div class="topbar">
     <button onclick="zeigeSeite('park')">Park</button>
@@ -112,17 +101,16 @@ input {
 <!-- REVIER -->
 <div id="revier" class="hidden">
 
-  <!-- OBEN -->
   <div class="topbar">
     <button onclick="zeigeSeite('eingabeName')">➕ Neuer Eintrag</button>
     <button onclick="zeigeSeite('start')">⬅ Zurück</button>
   </div>
 
-  <!-- TABELLE -->
   <table id="tabelle">
     <tr>
       <th>Name</th>
       <th>Wildart</th>
+      <th>Aktion</th>
     </tr>
   </table>
 
@@ -148,7 +136,13 @@ input {
 </div>
 
 <script>
+let eintraege = JSON.parse(localStorage.getItem("daten")) || [];
+let aktuellerIndex = -1;
 let eintrag = {};
+
+function speichernLocal() {
+  localStorage.setItem("daten", JSON.stringify(eintraege));
+}
 
 function zeigeSeite(seite) {
   let seiten = ["start","park","revier","eingabeName","eingabeWildart"];
@@ -170,18 +164,69 @@ function weiterZuWildart() {
 function setWild(wildart) {
   eintrag.wildart = wildart;
 
-  // Tabelle erweitern
-  let tabelle = document.getElementById("tabelle");
-  let row = tabelle.insertRow();
-  row.insertCell(0).innerText = eintrag.name;
-  row.insertCell(1).innerText = eintrag.wildart;
+  if(aktuellerIndex >= 0) {
+    eintraege[aktuellerIndex] = eintrag;
+    aktuellerIndex = -1;
+  } else {
+    eintraege.push(eintrag);
+  }
 
-  // zurücksetzen
+  speichernLocal();
+  anzeigen();
+
   eintrag = {};
   document.getElementById("name").value = "";
 
   zeigeSeite("revier");
 }
+
+function anzeigen() {
+  let tabelle = document.getElementById("tabelle");
+
+  // alte Zeilen löschen
+  tabelle.innerHTML = `
+    <tr>
+      <th>Name</th>
+      <th>Wildart</th>
+      <th>Aktion</th>
+    </tr>
+  `;
+
+  eintraege.forEach((e, index) => {
+    let row = tabelle.insertRow();
+
+    row.insertCell(0).innerText = e.name;
+    row.insertCell(1).innerText = e.wildart;
+
+    let aktion = row.insertCell(2);
+    aktion.innerHTML = `
+      <button onclick="bearbeiten(${index})">✏️</button>
+      <button onclick="loeschen(${index})">❌</button>
+    `;
+  });
+}
+
+function loeschen(index) {
+  eintraege.splice(index, 1);
+  speichernLocal();
+  anzeigen();
+}
+
+function bearbeiten(index) {
+  aktuellerIndex = index;
+  eintrag = eintraege[index];
+
+  document.getElementById("name").value = eintrag.name;
+
+  zeigeSeite("eingabeName");
+}
+
+// beim Laden anzeigen
+anzeigen();
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
