@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Abschussliste</title>
 
-  <!-- Wichtig für Handy -->
+  <!-- Für Handy -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -25,12 +25,10 @@
       width: 90%;
       max-width: 400px;
       text-align: center;
-      box-sizing: border-box;
     }
 
     h2 {
       margin-bottom: 5px;
-      font-size: 20px;
     }
 
     .info {
@@ -39,22 +37,26 @@
       margin-bottom: 15px;
     }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 5px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-      font-size: 16px;
+    img {
+      width: 200px;
+      border-radius: 15px;
+      margin: 15px 0;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .button-container button {
+      flex: 1;
     }
 
     button {
-      margin-top: 10px;
       padding: 12px;
-      width: 100%;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #2e7d32;
       color: white;
       font-size: 16px;
@@ -73,22 +75,16 @@
   <h2>Abschussliste Jagdrevier Prad</h2>
   <div class="info">Zahlencode: 1024</div>
 
-  <input type="text" id="name" placeholder="Name">
-  <input type="date" id="datum">
-  <input type="text" id="tier" placeholder="Tier">
+  <!-- LOGO -->
+  <img src="491438944_10226782024328158_4391837002889702168_n.jpg" alt="Logo">
 
-  <button onclick="speichern()">Speichern</button>
+  <!-- BUTTONS NEBENEINANDER -->
+  <div class="button-container">
+    <button onclick="alert('Park gewählt')">Park</button>
+    <button onclick="alert('Revier gewählt')">Revier</button>
+  </div>
+
 </div>
-
-<script>
-function speichern() {
-  let name = document.getElementById("name").value;
-  let datum = document.getElementById("datum").value;
-  let tier = document.getElementById("tier").value;
-
-  alert("Gespeichert:\n" + name + " | " + datum + " | " + tier);
-}
-</script>
 
 </body>
 </html>
