@@ -65,10 +65,18 @@ th {
   color:white;
 }
 
-.rot {
+/* NEU: Entnommen Design */
+.entnommen-btn {
   background:red;
   color:white;
+  border-radius:6px;
+  padding:4px 8px;
   cursor:pointer;
+  font-weight:bold;
+}
+
+.entnommen-done {
+  background:#e8f5e9;
 }
 
 input {
@@ -308,6 +316,18 @@ function finish(v) {
   zeigeSeite("revier");
 }
 
+function openDate(index) {
+  document.getElementById("date"+index).showPicker();
+}
+
+function setEntnommen(index, value) {
+  if(value) {
+    daten[index].entnommen = value;
+    speichern();
+    anzeigen();
+  }
+}
+
 function anzeigen() {
   let t = document.getElementById("tabelle");
   t.innerHTML = `
@@ -327,22 +347,17 @@ function anzeigen() {
     let ent = r.insertCell(6);
 
     if(!d.entnommen) {
-      ent.className = "rot";
-      ent.innerHTML = `<input type="date" onchange="setEntnommen(${i}, this.value)">`;
+      ent.innerHTML = `
+        <span class="entnommen-btn" onclick="openDate(${i})">+</span>
+        <input type="date" id="date${i}" style="display:none" onchange="setEntnommen(${i}, this.value)">
+      `;
     } else {
       ent.innerText = d.entnommen;
+      ent.className = "entnommen-done";
     }
 
     r.insertCell(7).innerText = d.verwendung;
   });
-}
-
-function setEntnommen(index, value) {
-  if(value) {
-    daten[index].entnommen = value;
-    speichern();
-    anzeigen();
-  }
 }
 
 anzeigen();
