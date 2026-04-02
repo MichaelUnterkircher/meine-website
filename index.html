@@ -95,7 +95,6 @@ input {
 
 <!-- REVIER -->
 <div id="revier" class="hidden">
-
   <div class="topbar">
     <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
     <button onclick="zeigeSeite('start')">⬅ Zurück</button>
@@ -103,16 +102,9 @@ input {
 
   <table id="tabelle">
     <tr>
-      <th>Name</th>
-      <th>Wild</th>
-      <th>kg</th>
-      <th>Ort</th>
-      <th>Zeit</th>
-      <th>Eingelagert</th>
-      <th>Verwendung</th>
+      <th>Name</th><th>Wild</th><th>kg</th><th>Ort</th><th>Zeit</th><th>Eingelagert</th><th>Verwendung</th>
     </tr>
   </table>
-
 </div>
 
 <!-- NAME -->
@@ -143,6 +135,7 @@ input {
   <button onclick="setWild('Geiß')">Geiß</button>
   <button onclick="setWild('Schmalgeiß')">Schmalgeiß</button>
   <button onclick="setWild('Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <!-- HIRSCH -->
@@ -153,6 +146,7 @@ input {
   <button onclick="setWild('Tier')">Tier</button>
   <button onclick="setWild('Schmaltier')">Schmaltier</button>
   <button onclick="setWild('Kalb')">Kalb</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <!-- ANDERE -->
@@ -160,6 +154,7 @@ input {
   <h3>Andere Wildart</h3>
   <input id="andereInput">
   <button onclick="setWild(document.getElementById('andereInput').value)">Weiter</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <!-- GEWICHT -->
@@ -167,6 +162,7 @@ input {
   <h3>Gewicht (kg)</h3>
   <input id="inputGewicht" type="number">
   <button onclick="nextOrt()">Weiter</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <!-- ORT -->
@@ -174,6 +170,7 @@ input {
   <h3>Örtlichkeit</h3>
   <input id="inputOrt">
   <button onclick="nextZeit()">Weiter</button>
+  <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
 <!-- ZEIT -->
@@ -181,6 +178,7 @@ input {
   <h3>Schusszeit</h3>
   <input id="inputZeit">
   <button onclick="nextDatum()">Weiter</button>
+  <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
 <!-- DATUM -->
@@ -188,6 +186,7 @@ input {
   <h3>Eingelagert</h3>
   <input type="date" id="inputDatum">
   <button onclick="nextVerwendung()">Weiter</button>
+  <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
 </div>
 
 <!-- VERWENDUNG -->
@@ -195,6 +194,7 @@ input {
   <h3>Verwendung</h3>
   <button onclick="finish('Eigengebrauch')">Eigengebrauch</button>
   <button onclick="finish('Verkauf')">Verkauf</button>
+  <button onclick="zeigeSeite('datum')">⬅ Zurück</button>
 </div>
 
 </div>
@@ -271,6 +271,10 @@ function anzeigen() {
 }
 
 anzeigen();
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
