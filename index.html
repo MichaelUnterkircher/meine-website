@@ -118,13 +118,35 @@ input {
 <!-- WILD -->
 <div id="wild" class="hidden">
   <h3>Wildart</h3>
-  <button onclick="setWild('Reh')">Reh</button>
-  <button onclick="setWild('Hirsch')">Hirsch</button>
+  <button onclick="zeigeSeite('reh')">Reh</button>
+  <button onclick="zeigeSeite('hirsch')">Hirsch</button>
   <button onclick="setWild('Gams')">Gams</button>
   <button onclick="setWild('Wildschwein')">Wildschwein</button>
   <button onclick="setWild('Hase')">Hase</button>
   <button onclick="zeigeSeite('andere')">Andere</button>
   <button onclick="zeigeSeite('name')">⬅ Zurück</button>
+</div>
+
+<!-- REH -->
+<div id="reh" class="hidden">
+  <h3>Rehwild</h3>
+  <button onclick="setWild('T-Bock')">T-Bock</button>
+  <button onclick="setWild('J-Bock')">J-Bock</button>
+  <button onclick="setWild('Geiß')">Geiß</button>
+  <button onclick="setWild('Schmalgeiß')">Schmalgeiß</button>
+  <button onclick="setWild('Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- HIRSCH -->
+<div id="hirsch" class="hidden">
+  <h3>Rotwild</h3>
+  <button onclick="setWild('T-Hirsch')">T-Hirsch</button>
+  <button onclick="setWild('J-Hirsch')">J-Hirsch</button>
+  <button onclick="setWild('Tier')">Tier</button>
+  <button onclick="setWild('Schmaltier')">Schmaltier</button>
+  <button onclick="setWild('Kalb')">Kalb</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <!-- ANDERE -->
@@ -154,7 +176,7 @@ input {
 <!-- ZEIT -->
 <div id="zeit" class="hidden">
   <h3>Schusszeit</h3>
-  <input id="inputZeit">
+  <input type="time" id="inputZeit">
   <button onclick="nextDatum()">Weiter</button>
   <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
@@ -237,8 +259,8 @@ function nextZeit() {
 
 function nextDatum() {
   let z = document.getElementById("inputZeit").value;
-  if(z.trim() === "") {
-    alert("Bitte Schusszeit eingeben!");
+  if(z === "") {
+    alert("Bitte Schusszeit auswählen!");
     return;
   }
   e.zeit = z;
