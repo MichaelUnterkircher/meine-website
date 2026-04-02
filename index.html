@@ -18,56 +18,55 @@ body {
 
 .container {
   background: white;
-  padding: 20px;
+  padding: 15px;
   border-radius: 15px;
   width: 100%;
-  max-width: 500px;
-  text-align: center;
+  max-width: 600px;
 }
 
 .hidden { display: none; }
 
+.topbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.topbar button {
+  flex: 1;
+}
+
 button {
   padding: 12px;
-  margin: 5px;
   border: none;
   border-radius: 10px;
   background: #2e7d32;
   color: white;
   font-size: 16px;
   cursor: pointer;
-  width: 100%;
 }
 
 button:hover {
   background: #1b5e20;
 }
 
-.button-container {
-  display: flex;
-  gap: 10px;
-}
-
-.button-container button {
-  flex: 1;
-}
-
 img {
   width: 180px;
   border-radius: 15px;
-  margin: 10px 0;
+  margin: 10px auto;
+  display: block;
 }
 
 table {
   width: 100%;
-  margin-top: 15px;
   border-collapse: collapse;
   font-size: 12px;
 }
 
 th, td {
   border: 1px solid #ccc;
-  padding: 5px;
+  padding: 6px;
+  text-align: left;
 }
 
 th {
@@ -92,12 +91,12 @@ input {
 
 <!-- START -->
 <div id="start">
-  <h2>Abschussliste Jagdrevier Prad</h2>
-  <div>Zahlencode: 1024</div>
+  <h2 style="text-align:center;">Abschussliste Jagdrevier Prad</h2>
+  <div style="text-align:center;">Zahlencode: 1024</div>
 
   <img src="491438944_10226782024328158_4391837002889702168_n.jpg">
 
-  <div class="button-container">
+  <div class="topbar">
     <button onclick="zeigeSeite('park')">Park</button>
     <button onclick="zeigeSeite('revier')">Revier</button>
   </div>
@@ -112,30 +111,31 @@ input {
 
 <!-- REVIER -->
 <div id="revier" class="hidden">
-  <h2>Revier</h2>
 
-  <button onclick="zeigeSeite('eingabeName')">➕ Neuer Eintrag</button>
+  <!-- OBEN -->
+  <div class="topbar">
+    <button onclick="zeigeSeite('eingabeName')">➕ Neuer Eintrag</button>
+    <button onclick="zeigeSeite('start')">⬅ Zurück</button>
+  </div>
 
-  <table>
+  <!-- TABELLE -->
+  <table id="tabelle">
     <tr>
       <th>Name</th>
       <th>Wildart</th>
     </tr>
   </table>
 
-  <button onclick="zeigeSeite('start')">⬅ Zurück</button>
 </div>
 
-<!-- SCHRITT 1: NAME -->
+<!-- NAME -->
 <div id="eingabeName" class="hidden">
   <h2>Name Erleger</h2>
-
   <input type="text" id="name">
-
   <button onclick="weiterZuWildart()">Weiter</button>
 </div>
 
-<!-- SCHRITT 2: WILDART -->
+<!-- WILDART -->
 <div id="eingabeWildart" class="hidden">
   <h2>Wildart</h2>
 
@@ -143,7 +143,6 @@ input {
   <button onclick="setWild('Hirsch')">Hirsch</button>
   <button onclick="setWild('Gams')">Gams</button>
   <button onclick="setWild('Fuchs')">Fuchs</button>
-
 </div>
 
 </div>
@@ -171,7 +170,15 @@ function weiterZuWildart() {
 function setWild(wildart) {
   eintrag.wildart = wildart;
 
-  alert("Gespeichert:\n" + eintrag.name + " - " + eintrag.wildart);
+  // Tabelle erweitern
+  let tabelle = document.getElementById("tabelle");
+  let row = tabelle.insertRow();
+  row.insertCell(0).innerText = eintrag.name;
+  row.insertCell(1).innerText = eintrag.wildart;
+
+  // zurücksetzen
+  eintrag = {};
+  document.getElementById("name").value = "";
 
   zeigeSeite("revier");
 }
