@@ -105,12 +105,14 @@ input, select {
   width:320px;
 }
 
+/* Marker kleiner + Rand */
 .marker {
   position:absolute;
-  width:10px;
-  height:10px;
+  width:6px;
+  height:6px;
   border-radius:50%;
   transform:translate(-50%,-50%);
+  border:1px solid black;
 }
 </style>
 </head>
@@ -244,9 +246,16 @@ input, select {
 <!-- Karte -->
 <div id="mapPopup" class="popup hidden">
 <h3>Karte Prad</h3>
-<div style="position:relative;">
-<img id="mapImage" src="Revier.png" style="width:100%;cursor:crosshair;">
+
+<div style="position:relative; overflow:hidden;">
+  <img id="mapImage" src="Revier.png" style="width:100%;cursor:crosshair; transform-origin:center;">
 </div>
+
+<div style="display:flex; gap:10px; margin-top:10px;">
+  <button onclick="zoomIn()">+</button>
+  <button onclick="zoomOut()">-</button>
+</div>
+
 <button onclick="closeMap()">OK</button>
 </div>
 
@@ -254,7 +263,8 @@ input, select {
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 let aktuellerPunkt = null;
-let mapMode = "input"; // NEU
+let mapMode = "input";
+let zoomLevel = 1;
 
 for(let i=0;i<=200;i++){
  let opt=document.createElement("option");
@@ -405,7 +415,7 @@ function drawMarker(x,y,wildart){
 }
 
 document.getElementById("mapImage").addEventListener("click",function(ev){
- if(mapMode==="view") return; // 👉 verhindert ändern im Anzeige-Modus
+ if(mapMode==="view") return;
 
  let rect=this.getBoundingClientRect();
  let x=ev.clientX-rect.left;
@@ -424,6 +434,23 @@ function openMapFromTable(i){
    drawMarker(eintrag.koord.x,eintrag.koord.y,eintrag.wildart);
   }
  },100);
+}
+
+/* Zoom */
+function zoomIn(){
+ zoomLevel += 0.2;
+ applyZoom();
+}
+
+function zoomOut(){
+ zoomLevel -= 0.2;
+ if(zoomLevel < 1) zoomLevel = 1;
+ applyZoom();
+}
+
+function applyZoom(){
+ let img=document.getElementById("mapImage");
+ img.style.transform="scale("+zoomLevel+")";
 }
 
 /* Tabelle */
