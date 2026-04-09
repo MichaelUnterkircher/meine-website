@@ -111,12 +111,6 @@ input, select {
   z-index:1000;
   width:320px;
 }
-
-@media (max-width:600px){
-  body { padding:5px; }
-  button { font-size:14px; padding:10px; }
-  h2,h3 { text-align:center; }
-}
 </style>
 </head>
 
@@ -153,6 +147,7 @@ input, select {
   </div>
 </div>
 
+<!-- Eingabe bleibt gleich -->
 <div id="name" class="hidden">
   <h3>Name Erleger</h3>
   <input id="inputName">
@@ -248,6 +243,7 @@ input, select {
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 
+/* Gewicht füllen */
 for(let i=0;i<=200;i++){
   let opt=document.createElement("option");
   opt.value=i;
@@ -255,18 +251,21 @@ for(let i=0;i<=200;i++){
   inputGewicht.appendChild(opt);
 }
 
+/* ROBUSTE DATUM FORMATIERUNG */
+function formatDatum(d){
+  if(!d) return "";
+  let date = new Date(d);
+  let tag = String(date.getDate()).padStart(2,'0');
+  let monat = String(date.getMonth()+1).padStart(2,'0');
+  let jahr = date.getFullYear();
+  return `${tag}.${monat}.${jahr}`;
+}
+
 function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
 
 function zeigeSeite(id){
   document.querySelectorAll("div[id]").forEach(d=>d.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
-}
-
-/* DATUM FORMAT */
-function formatDatum(d){
-  if(!d) return "";
-  let [y,m,day] = d.split("-");
-  return day+"."+m+"."+y;
 }
 
 function nextWild(){
@@ -333,12 +332,8 @@ function finish(v){
 
 function openDate(i){
   let el = document.getElementById("date"+i);
-  if (el.showPicker) {
-    el.showPicker();
-  } else {
-    el.style.display = "block";
-    el.focus();
-  }
+  if (el.showPicker) el.showPicker();
+  else { el.style.display="block"; el.focus(); }
 }
 
 function setEntnommen(i,val){
