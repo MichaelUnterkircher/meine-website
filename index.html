@@ -65,7 +65,6 @@ th {
   color:white;
 }
 
-/* Entnommen */
 .entnommen-btn {
   background:red;
   color:white;
@@ -79,7 +78,6 @@ th {
   background:#e8f5e9;
 }
 
-/* Abfall */
 .abfall-btn {
   background:blue;
   color:white;
@@ -101,7 +99,6 @@ input, select {
   border:1px solid #ccc;
 }
 
-/* Popup */
 .popup {
   position:fixed;
   top:50%;
@@ -127,7 +124,6 @@ input, select {
 
 <div class="container">
 
-<!-- START -->
 <div id="start">
   <h2>Abschussliste Jagdrevier Prad</h2>
   <div>Zahlencode: 1024</div>
@@ -140,14 +136,12 @@ input, select {
   </div>
 </div>
 
-<!-- PARK -->
 <div id="park" class="hidden">
   <h2>Park</h2>
   <p>noch nicht aktiv</p>
   <button onclick="zeigeSeite('start')">⬅ Zurück</button>
 </div>
 
-<!-- REVIER -->
 <div id="revier" class="hidden">
   <div class="topbar">
     <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
@@ -159,7 +153,6 @@ input, select {
   </div>
 </div>
 
-<!-- NAME -->
 <div id="name" class="hidden">
   <h3>Name Erleger</h3>
   <input id="inputName">
@@ -167,7 +160,6 @@ input, select {
   <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
-<!-- WILD -->
 <div id="wild" class="hidden">
   <h3>Wildart</h3>
   <button onclick="zeigeSeite('reh')">Rehwild</button>
@@ -179,7 +171,6 @@ input, select {
   <button onclick="zeigeSeite('name')">⬅ Zurück</button>
 </div>
 
-<!-- REH -->
 <div id="reh" class="hidden">
   <h3>Rehwild</h3>
   <button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
@@ -190,7 +181,6 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- HIRSCH -->
 <div id="hirsch" class="hidden">
   <h3>Rotwild</h3>
   <button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
@@ -201,7 +191,6 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- GAMS -->
 <div id="gams" class="hidden">
   <h3>Gamswild</h3>
   <button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
@@ -211,7 +200,6 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- ANDERE -->
 <div id="andere" class="hidden">
   <h3>Andere Wildart</h3>
   <input id="andereInput">
@@ -219,7 +207,6 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- GEWICHT (Scroller) -->
 <div id="gewicht" class="hidden">
   <h3>Gewicht (kg)</h3>
   <select id="inputGewicht"></select>
@@ -227,7 +214,6 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- ORT -->
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
   <input id="inputOrt">
@@ -235,7 +221,6 @@ input, select {
   <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
-<!-- ZEIT -->
 <div id="zeit" class="hidden">
   <h3>Schusszeit</h3>
   <input type="time" id="inputZeit">
@@ -243,7 +228,6 @@ input, select {
   <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
-<!-- DATUM -->
 <div id="datum" class="hidden">
   <h3>Eingelagert Datum</h3>
   <input type="date" id="inputDatum">
@@ -251,7 +235,6 @@ input, select {
   <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
 </div>
 
-<!-- VERWENDUNG -->
 <div id="verwendung" class="hidden">
   <h3>Verwendung</h3>
   <button onclick="finish('Eigengebrauch')">Eigengebrauch</button>
@@ -265,7 +248,6 @@ input, select {
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 
-/* Gewicht füllen */
 for(let i=0;i<=200;i++){
   let opt=document.createElement("option");
   opt.value=i;
@@ -342,9 +324,15 @@ function finish(v){
   zeigeSeite("revier");
 }
 
-/* Entnommen Datum */
+/* FIX: Entnahme funktioniert überall */
 function openDate(i){
-  document.getElementById("date"+i).showPicker();
+  let el = document.getElementById("date"+i);
+  if (el.showPicker) {
+    el.showPicker();
+  } else {
+    el.style.display = "block";
+    el.focus();
+  }
 }
 
 function setEntnommen(i,val){
@@ -354,7 +342,7 @@ function setEntnommen(i,val){
   }
 }
 
-/* Abfall Popup */
+/* Abfall */
 function handleAbfall(i){
   let box=document.createElement("div");
   box.className="popup";
@@ -362,7 +350,7 @@ function handleAbfall(i){
   <b>ACHTUNG!</b><br><br>
   Der Dienst der Abfallentsorgung durch das Revier ist nur in der Zeit der Parkjagt aufrecht.<br><br>
   Hierfür ist der Betrag von 5€ zu entrichten.<br><br>
-  Sollten zu einem späteren Zeitpunkt wieder Abfälle anfallen sind diese Gebüren noch einmal zu entrichten.<br><br>
+  Sollten zu einem späteren Zeitpunkt wieder Abfälle, z.B. bei der Zerwirkung, anfallen sind diese Gebüren noch einmal zu entrichten.<br><br>
   <button onclick="setAbfall(${i},'bezahlt')">Ja</button>
   <button onclick="setAbfall(${i},'nein')">Nein</button>
   `;
@@ -396,7 +384,7 @@ function anzeigen(){
     let ent=r.insertCell(7);
     if(!d.entnommen){
       ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
-      <input type="date" id="date${i}" style="display:none" onchange="setEntnommen(${i},this.value)">`;
+      <input type="date" id="date${i}" style="display:none;margin-top:5px;" onchange="setEntnommen(${i},this.value)">`;
     } else {
       ent.innerText=d.entnommen;
       ent.className="entnommen-done";
