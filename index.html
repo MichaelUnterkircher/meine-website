@@ -5,10 +5,6 @@
 <title>Abschussliste</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <style>
 body {
   margin:0;
@@ -47,7 +43,9 @@ button {
   font-size:16px;
 }
 
-.table-wrapper { overflow-x:auto; }
+.table-wrapper {
+  overflow-x:auto;
+}
 
 table {
   width:100%;
@@ -76,7 +74,9 @@ th {
   font-weight:bold;
 }
 
-.entnommen-done { background:#e8f5e9; }
+.entnommen-done {
+  background:#e8f5e9;
+}
 
 .abfall-btn {
   background:blue;
@@ -111,19 +111,6 @@ input, select {
   z-index:1000;
   width:320px;
 }
-
-/* Karte */
-#map {
-  height:300px;
-  border-radius:10px;
-  margin-top:10px;
-}
-
-.link {
-  color:blue;
-  text-decoration:underline;
-  cursor:pointer;
-}
 </style>
 </head>
 
@@ -131,7 +118,6 @@ input, select {
 
 <div class="container">
 
-<!-- START -->
 <div id="start">
   <h2>Abschussliste Jagdrevier Prad</h2>
   <div>Zahlencode: 1024</div>
@@ -168,7 +154,6 @@ input, select {
   <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
-<!-- (Wild-Auswahl unverändert) -->
 <div id="wild" class="hidden">
   <h3>Wildart</h3>
   <button onclick="zeigeSeite('reh')">Rehwild</button>
@@ -180,7 +165,42 @@ input, select {
   <button onclick="zeigeSeite('name')">⬅ Zurück</button>
 </div>
 
-<!-- Gewicht -->
+<div id="reh" class="hidden">
+  <h3>Rehwild</h3>
+  <button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
+  <button onclick="setWildDetail('Rehwild','J-Bock')">J-Bock</button>
+  <button onclick="setWildDetail('Rehwild','Geiß')">Geiß</button>
+  <button onclick="setWildDetail('Rehwild','Schmalgeiß')">Schmalgeiß</button>
+  <button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="hirsch" class="hidden">
+  <h3>Rotwild</h3>
+  <button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
+  <button onclick="setWildDetail('Rotwild','J-Hirsch')">J-Hirsch</button>
+  <button onclick="setWildDetail('Rotwild','Tier')">Tier</button>
+  <button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
+  <button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="gams" class="hidden">
+  <h3>Gamswild</h3>
+  <button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
+  <button onclick="setWildDetail('Gamswild','Geiß')">Geiß</button>
+  <button onclick="setWildDetail('Gamswild','Jahrling')">Jahrling</button>
+  <button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="andere" class="hidden">
+  <h3>Andere Wildart</h3>
+  <input id="andereInput">
+  <button onclick="setAndere()">Weiter</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
 <div id="gewicht" class="hidden">
   <h3>Gewicht (kg)</h3>
   <select id="inputGewicht"></select>
@@ -188,10 +208,9 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- ORT -->
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
-  <button onclick="openMap()">Prad</button>
+  <button onclick="setOrt('Prad')">Prad</button>
   <button onclick="zeigeAndereOrt()">Andere</button>
 
   <div id="andereOrtBox" class="hidden">
@@ -200,13 +219,6 @@ input, select {
   </div>
 
   <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
-</div>
-
-<!-- Karte -->
-<div id="mapSeite" class="hidden">
-  <h3>Ort auswählen</h3>
-  <div id="map"></div>
-  <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
 <div id="zeit" class="hidden">
@@ -235,9 +247,7 @@ input, select {
 <script>
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
-let map, marker;
 
-/* Gewicht */
 for(let i=0;i<=200;i++){
   let opt=document.createElement("option");
   opt.value=i;
@@ -259,7 +269,17 @@ function nextWild(){
   zeigeSeite("wild");
 }
 
-function setWild(w){ e.wildart=w; e.wild=""; zeigeSeite("gewicht"); }
+function setWild(w){
+  e.wildart=w;
+  e.wild="";
+  zeigeSeite("gewicht");
+}
+
+function setWildDetail(a,d){
+  e.wildart=a;
+  e.wild=d;
+  zeigeSeite("gewicht");
+}
 
 function setAndere(){
   let v=andereInput.value.trim();
@@ -269,33 +289,14 @@ function setAndere(){
   zeigeSeite("gewicht");
 }
 
-function nextOrt(){ e.gewicht=inputGewicht.value; zeigeSeite("ort"); }
+function nextOrt(){
+  e.gewicht=inputGewicht.value;
+  zeigeSeite("ort");
+}
 
-/* 🔥 Karte */
-function openMap(){
-  zeigeSeite("mapSeite");
-
-  setTimeout(()=>{
-    if(!map){
-      map = L.map('map').setView([46.616, 10.583], 13);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-      map.on('click', function(ev){
-        let lat = ev.latlng.lat;
-        let lng = ev.latlng.lng;
-
-        if(marker) map.removeLayer(marker);
-        marker = L.marker([lat,lng]).addTo(map);
-
-        e.lat = lat;
-        e.lng = lng;
-        e.ort = "Koordinaten";
-
-        zeigeSeite("zeit");
-      });
-    }
-  },200);
+function setOrt(o){
+  e.ort=o;
+  zeigeSeite("zeit");
 }
 
 function zeigeAndereOrt(){
@@ -332,14 +333,47 @@ function finish(v){
   zeigeSeite("revier");
 }
 
-function mapsLink(lat,lng){
-  return `https://www.google.com/maps?q=${lat},${lng}`;
+function openDate(i){
+  let el=document.getElementById("date"+i);
+  if(el.showPicker) el.showPicker();
+  else { el.style.display="block"; el.focus(); }
+}
+
+function setEntnommen(i,val){
+  if(val){
+    daten[i].entnommen=val;
+    speichern(); anzeigen();
+  }
+}
+
+/* ✅ NEUER TEXT */
+function handleAbfall(i){
+  let box=document.createElement("div");
+  box.className="popup";
+  box.innerHTML=`
+  <b>ACHTUNG!</b><br><br>
+  Die Abfallentsorgung durch das Revier ist nur während der Parkjagd sichergestellt.<br><br>
+  Hierfür ist eine Gebühr von 5 € zu entrichten.<br><br>
+  Sollten zu einem späteren Zeitpunkt erneut Abfälle anfallen (z. B. beim Zerwirken), ist diese Gebühr nochmals zu entrichten.<br><br>
+  <button onclick="setAbfall(${i},'bezahlt')">Ja</button>
+  <button onclick="setAbfall(${i},'nein')">Nein</button>
+  `;
+  document.body.appendChild(box);
+}
+
+function setAbfall(i,val){
+  daten[i].abfall=val;
+  speichern(); anzeigen();
+  document.querySelector(".popup").remove();
 }
 
 function formatDatum(d){
   if(!d) return "";
   let date=new Date(d);
-  return `${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}.${date.getFullYear()}`;
+  let tag=String(date.getDate()).padStart(2,'0');
+  let monat=String(date.getMonth()+1).padStart(2,'0');
+  let jahr=date.getFullYear();
+  return `${tag}.${monat}.${jahr}`;
 }
 
 function anzeigen(){
@@ -347,24 +381,40 @@ function anzeigen(){
   t.innerHTML=`
   <tr>
   <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
-  <th>Schusszeit</th><th>Eingelagert</th></tr>`;
+  <th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th>
+  <th>Verwendung</th><th>Abfall</th></tr>`;
 
-  daten.forEach(d=>{
+  daten.forEach((d,i)=>{
     let r=t.insertRow();
     r.insertCell(0).innerText=d.name;
     r.insertCell(1).innerText=d.wildart;
     r.insertCell(2).innerText=d.wild;
     r.insertCell(3).innerText=d.gewicht;
-
-    let ort=r.insertCell(4);
-    if(d.lat){
-      ort.innerHTML=`<span class="link" onclick="window.open('${mapsLink(d.lat,d.lng)}')">📍 Karte</span>`;
-    } else {
-      ort.innerText=d.ort;
-    }
-
+    r.insertCell(4).innerText=d.ort;
     r.insertCell(5).innerText=d.zeit;
     r.insertCell(6).innerText=formatDatum(d.datum);
+
+    let ent=r.insertCell(7);
+    if(!d.entnommen){
+      ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
+      <input type="date" id="date${i}" style="display:none;margin-top:5px;" onchange="setEntnommen(${i},this.value)">`;
+    } else {
+      ent.innerText=formatDatum(d.entnommen);
+      ent.className="entnommen-done";
+    }
+
+    r.insertCell(8).innerText=d.verwendung;
+
+    let ab=r.insertCell(9);
+    if(d.abfall===null){
+      ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
+    } else if(d.abfall==="nein"){
+      ab.innerText="Nein";
+      ab.className="abfall-grau";
+    } else {
+      ab.innerText="Ja";
+      ab.className="abfall-ja";
+    }
   });
 }
 
