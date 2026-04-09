@@ -43,7 +43,9 @@ button {
   font-size:16px;
 }
 
-.table-wrapper { overflow-x:auto; }
+.table-wrapper {
+  overflow-x:auto;
+}
 
 table {
   width:100%;
@@ -69,7 +71,6 @@ th {
   border-radius:6px;
   padding:4px 8px;
   cursor:pointer;
-  font-weight:bold;
 }
 
 .entnommen-done { background:#e8f5e9; }
@@ -80,11 +81,9 @@ th {
   border-radius:6px;
   padding:4px 8px;
   cursor:pointer;
-  font-weight:bold;
 }
 
 .abfall-ja { background:#4caf50; color:white; }
-.abfall-nein { background:#f44336; color:white; }
 .abfall-grau { background:#ccc; }
 
 input, select {
@@ -95,35 +94,22 @@ input, select {
   border:1px solid #ccc;
 }
 
-.popup {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:white;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 20px rgba(0,0,0,0.3);
-  z-index:1000;
-  width:320px;
-}
-
-/* 🗺️ Karte */
+/* Karte */
 .map-container {
   position:relative;
 }
 
-.map-container img {
+#mapImg {
   width:100%;
   border-radius:10px;
 }
 
-.marker {
+.point {
   position:absolute;
-  width:14px;
-  height:14px;
+  width:12px;
+  height:12px;
   border-radius:50%;
-  transform:translate(-50%, -50%);
+  transform:translate(-50%,-50%);
 }
 </style>
 </head>
@@ -134,23 +120,19 @@ input, select {
 
 <div id="start">
   <h2>Abschussliste Jagdrevier Prad</h2>
-  <div>Zahlencode: 1024</div>
-
-  <img src="491438944_10226782024328158_4391837002889702168_n.jpg" style="width:180px;display:block;margin:auto;">
 
   <div class="topbar">
     <button onclick="zeigeSeite('park')">Park</button>
-    <button onclick="zeigeSeite('revier')">Revier</button>
+    <button onclick="zeigeSeite('Revier')">Revier</button>
   </div>
 </div>
 
 <div id="park" class="hidden">
-  <h2>Park</h2>
-  <p>noch nicht aktiv</p>
   <button onclick="zeigeSeite('start')">⬅ Zurück</button>
 </div>
 
-<div id="revier" class="hidden">
+<!-- ✅ HIER groß geschrieben -->
+<div id="Revier" class="hidden">
   <div class="topbar">
     <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
     <button onclick="zeigeSeite('start')">⬅ Zurück</button>
@@ -162,100 +144,43 @@ input, select {
 </div>
 
 <div id="name" class="hidden">
-  <h3>Name Erleger</h3>
-  <input id="inputName">
+  <input id="inputName" placeholder="Name">
   <button onclick="nextWild()">Weiter</button>
-  <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
 <div id="wild" class="hidden">
-  <h3>Wildart</h3>
-  <button onclick="zeigeSeite('reh')">Rehwild</button>
-  <button onclick="zeigeSeite('hirsch')">Rotwild</button>
-  <button onclick="zeigeSeite('gams')">Gamswild</button>
-  <button onclick="setWild('Wildschwein')">Wildschwein</button>
-  <button onclick="setWild('Hase')">Hase</button>
-  <button onclick="zeigeSeite('andere')">Andere</button>
-  <button onclick="zeigeSeite('name')">⬅ Zurück</button>
-</div>
-
-<div id="reh" class="hidden">
-  <h3>Rehwild</h3>
-  <button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
-  <button onclick="setWildDetail('Rehwild','J-Bock')">J-Bock</button>
-  <button onclick="setWildDetail('Rehwild','Geiß')">Geiß</button>
-  <button onclick="setWildDetail('Rehwild','Schmalgeiß')">Schmalgeiß</button>
-  <button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
-  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="hirsch" class="hidden">
-  <h3>Rotwild</h3>
-  <button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
-  <button onclick="setWildDetail('Rotwild','J-Hirsch')">J-Hirsch</button>
-  <button onclick="setWildDetail('Rotwild','Tier')">Tier</button>
-  <button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
-  <button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
-  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="gams" class="hidden">
-  <h3>Gamswild</h3>
-  <button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
-  <button onclick="setWildDetail('Gamswild','Geiß')">Geiß</button>
-  <button onclick="setWildDetail('Gamswild','Jahrling')">Jahrling</button>
-  <button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
-  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="andere" class="hidden">
-  <h3>Andere Wildart</h3>
-  <input id="andereInput">
-  <button onclick="setAndere()">Weiter</button>
-  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+  <button onclick="setWildDetail('Rehwild','')">Rehwild</button>
+  <button onclick="setWildDetail('Rotwild','')">Rotwild</button>
+  <button onclick="setWildDetail('Gamswild','')">Gamswild</button>
 </div>
 
 <div id="gewicht" class="hidden">
-  <h3>Gewicht (kg)</h3>
   <select id="inputGewicht"></select>
   <button onclick="nextOrt()">Weiter</button>
-  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <div id="ort" class="hidden">
-  <h3>Örtlichkeit</h3>
-  <button onclick="zeigeKarte()">Prad</button>
-  <button onclick="zeigeAndereOrt()">Andere</button>
-
-  <div id="andereOrtBox" class="hidden">
-    <input id="inputOrt" placeholder="Ort eingeben">
-    <button onclick="setAndereOrt()">Weiter</button>
-  </div>
-
-  <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
+  <button onclick="openMap()">📍 Prad (Karte)</button>
 </div>
 
-<!-- 🗺️ KARTENSEITE -->
-<div id="karte" class="hidden">
+<div id="map" class="hidden">
   <h3>Punkt setzen</h3>
 
-  <div class="map-container" onclick="setPoint(event)">
-    <img src="karte.png" id="mapImage">
-    <div id="marker" class="marker"></div>
+  <div class="map-container">
+    <img id="mapImg" src="karte.png">
   </div>
 
-  <button onclick="savePoint()">Weiter</button>
-  <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
+  <button onclick="confirmPoint()">Speichern</button>
 </div>
 
 </div>
 
 <script>
-let daten = JSON.parse(localStorage.getItem("daten")) || [];
+let daten = [];
 let e = {};
-let posX=null, posY=null;
+let clickX = null;
+let clickY = null;
 
-/* Gewicht */
 for(let i=0;i<=200;i++){
   let opt=document.createElement("option");
   opt.value=i;
@@ -263,162 +188,70 @@ for(let i=0;i<=200;i++){
   inputGewicht.appendChild(opt);
 }
 
-function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
-
 function zeigeSeite(id){
-  document.querySelectorAll("div[id]").forEach(d=>{
-    d.classList.add("hidden");
-    d.style.display="";
-  });
-  let el=document.getElementById(id);
-  el.classList.remove("hidden");
-  el.style.display="block";
+  document.querySelectorAll("div[id]").forEach(d=>d.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
 }
 
 function nextWild(){
-  let v=inputName.value.trim();
-  if(!v) return alert("Bitte Name eingeben!");
-  e.name=v;
+  e.name=inputName.value;
   zeigeSeite("wild");
 }
 
-function setWild(w){ e.wildart=w; e.wild=""; zeigeSeite("gewicht"); }
-function setWildDetail(a,d){ e.wildart=a; e.wild=d; zeigeSeite("gewicht"); }
-
-function setAndere(){
-  let v=andereInput.value.trim();
-  if(!v) return alert("Bitte Wildart eingeben!");
-  e.wildart=v; e.wild=""; zeigeSeite("gewicht");
+function setWildDetail(a,d){
+  e.wildart=a;
+  zeigeSeite("gewicht");
 }
 
-function nextOrt(){ e.gewicht=inputGewicht.value; zeigeSeite("ort"); }
-
-function zeigeKarte(){ zeigeSeite("karte"); }
-
-function setPoint(event){
-  let rect=mapImage.getBoundingClientRect();
-  posX=(event.clientX-rect.left)/rect.width;
-  posY=(event.clientY-rect.top)/rect.height;
-
-  let m=document.getElementById("marker");
-  m.style.left=(posX*100)+"%";
-  m.style.top=(posY*100)+"%";
-
-  /* Farbe */
-  if(e.wildart==="Rotwild") m.style.background="red";
-  else if(e.wildart==="Rehwild") m.style.background="green";
-  else m.style.background="blue";
+function nextOrt(){
+  e.gewicht=inputGewicht.value;
+  zeigeSeite("ort");
 }
 
-function savePoint(){
-  if(posX===null) return alert("Bitte Punkt wählen!");
-  e.ort="📍 Karte";
-  e.x=posX;
-  e.y=posY;
-  zeigeSeite("zeit");
+function openMap(){
+  zeigeSeite("map");
 }
 
-function zeigeAndereOrt(){
-  document.getElementById("andereOrtBox").classList.remove("hidden");
-}
+mapImg.onclick=function(ev){
+  let rect=this.getBoundingClientRect();
+  clickX=(ev.clientX-rect.left)/rect.width;
+  clickY=(ev.clientY-rect.top)/rect.height;
 
-function setAndereOrt(){
-  let v=inputOrt.value.trim();
-  if(!v) return alert("Bitte Ort eingeben!");
-  e.ort=v;
-  zeigeSeite("zeit");
-}
+  document.querySelectorAll(".point").forEach(p=>p.remove());
 
-function nextDatum(){
-  let v=inputZeit.value;
-  if(!v) return alert("Bitte Schusszeit!");
-  e.zeit=v;
-  zeigeSeite("datum");
-}
+  let p=document.createElement("div");
+  p.className="point";
 
-function nextVerwendung(){
-  let v=inputDatum.value;
-  if(!v) return alert("Bitte Datum!");
-  e.datum=v;
-  zeigeSeite("verwendung");
-}
+  if(e.wildart==="Rehwild") p.style.background="green";
+  else if(e.wildart==="Rotwild") p.style.background="red";
+  else p.style.background="blue";
 
-function finish(v){
-  e.verwendung=v;
-  e.entnommen="";
-  e.abfall=null;
+  p.style.left=(clickX*100)+"%";
+  p.style.top=(clickY*100)+"%";
+
+  document.querySelector(".map-container").appendChild(p);
+};
+
+function confirmPoint(){
+  e.mapX=clickX;
+  e.mapY=clickY;
+
   daten.push(e);
-  speichern(); anzeigen(); e={};
-  zeigeSeite("revier");
-}
+  anzeigen();
 
-function openDate(i){
-  let el=document.getElementById("date"+i);
-  if(el.showPicker) el.showPicker();
-  else { el.style.display="block"; el.focus(); }
-}
-
-function setEntnommen(i,val){
-  if(val){
-    daten[i].entnommen=val;
-    speichern(); anzeigen();
-  }
-}
-
-function formatDatum(d){
-  if(!d) return "";
-  let date=new Date(d);
-  return String(date.getDate()).padStart(2,'0')+"."+String(date.getMonth()+1).padStart(2,'0')+"."+date.getFullYear();
+  e={};
+  zeigeSeite("Revier"); /* ✅ wichtig */
 }
 
 function anzeigen(){
   let t=document.getElementById("tabelle");
-  t.innerHTML=`<tr>
-  <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
-  <th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th>
-  <th>Verwendung</th></tr>`;
+  t.innerHTML="<tr><th>Name</th><th>Wildart</th></tr>";
 
-  daten.forEach((d,i)=>{
+  daten.forEach(d=>{
     let r=t.insertRow();
     r.insertCell(0).innerText=d.name;
     r.insertCell(1).innerText=d.wildart;
-    r.insertCell(2).innerText=d.wild;
-    r.insertCell(3).innerText=d.gewicht;
-
-    let ort=r.insertCell(4);
-    if(d.x){
-      ort.innerHTML=`<span onclick="showPoint(${i})" style="color:blue;cursor:pointer;">📍 Karte</span>`;
-    } else {
-      ort.innerText=d.ort;
-    }
-
-    r.insertCell(5).innerText=d.zeit;
-    r.insertCell(6).innerText=formatDatum(d.datum);
-
-    let ent=r.insertCell(7);
-    if(!d.entnommen){
-      ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
-      <input type="date" id="date${i}" style="display:none" onchange="setEntnommen(${i},this.value)">`;
-    } else {
-      ent.innerText=formatDatum(d.entnommen);
-      ent.className="entnommen-done";
-    }
-
-    r.insertCell(8).innerText=d.verwendung;
   });
-}
-
-function showPoint(i){
-  zeigeSeite("karte");
-  setTimeout(()=>{
-    let m=document.getElementById("marker");
-    m.style.left=(daten[i].x*100)+"%";
-    m.style.top=(daten[i].y*100)+"%";
-
-    if(daten[i].wildart==="Rotwild") m.style.background="red";
-    else if(daten[i].wildart==="Rehwild") m.style.background="green";
-    else m.style.background="blue";
-  },100);
 }
 
 anzeigen();
