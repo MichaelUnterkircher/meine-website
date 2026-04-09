@@ -49,7 +49,7 @@ table {
   width:100%;
   border-collapse:collapse;
   font-size:12px;
-  min-width:950px;
+  min-width:1000px;
 }
 
 th,td {
@@ -95,19 +95,6 @@ input, select {
   border:1px solid #ccc;
 }
 
-.popup {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:white;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 20px rgba(0,0,0,0.3);
-  z-index:1000;
-  width:320px;
-}
-
 .link {
   color:blue;
   text-decoration:underline;
@@ -120,6 +107,7 @@ input, select {
 
 <div class="container">
 
+<!-- START -->
 <div id="start">
   <h2>Abschussliste Jagdrevier Prad</h2>
   <div>Zahlencode: 1024</div>
@@ -129,45 +117,98 @@ input, select {
   </div>
 </div>
 
-<div id="revier">
+<!-- REVIER -->
+<div id="revier" class="hidden">
   <div class="topbar">
     <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
+    <button onclick="zeigeSeite('start')">⬅ Zurück</button>
   </div>
+
   <div class="table-wrapper">
     <table id="tabelle"></table>
   </div>
 </div>
 
+<!-- NAME -->
 <div id="name" class="hidden">
   <h3>Name Erleger</h3>
   <input id="inputName">
   <button onclick="nextWild()">Weiter</button>
+  <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
+<!-- WILD -->
 <div id="wild" class="hidden">
   <h3>Wildart</h3>
-  <button onclick="setWild('Rehwild','T-Bock')">Rehwild T-Bock</button>
-  <button onclick="setWild('Rotwild','T-Hirsch')">Rotwild</button>
+  <button onclick="zeigeSeite('reh')">Rehwild</button>
+  <button onclick="zeigeSeite('hirsch')">Rotwild</button>
+  <button onclick="zeigeSeite('gams')">Gamswild</button>
+  <button onclick="setWild('Wildschwein','Wildschwein')">Wildschwein</button>
+  <button onclick="setWild('Hase','Hase')">Hase</button>
+  <button onclick="zeigeSeite('andere')">Andere</button>
+  <button onclick="zeigeSeite('name')">⬅ Zurück</button>
 </div>
 
+<!-- REH -->
+<div id="reh" class="hidden">
+  <h3>Rehwild</h3>
+  <button onclick="setWild('Rehwild','T-Bock')">T-Bock</button>
+  <button onclick="setWild('Rehwild','J-Bock')">J-Bock</button>
+  <button onclick="setWild('Rehwild','Geiß')">Geiß</button>
+  <button onclick="setWild('Rehwild','Schmalgeiß')">Schmalgeiß</button>
+  <button onclick="setWild('Rehwild','Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- HIRSCH -->
+<div id="hirsch" class="hidden">
+  <h3>Rotwild</h3>
+  <button onclick="setWild('Rotwild','T-Hirsch')">T-Hirsch</button>
+  <button onclick="setWild('Rotwild','J-Hirsch')">J-Hirsch</button>
+  <button onclick="setWild('Rotwild','Tier')">Tier</button>
+  <button onclick="setWild('Rotwild','Schmaltier')">Schmaltier</button>
+  <button onclick="setWild('Rotwild','Kalb')">Kalb</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- GAMS -->
+<div id="gams" class="hidden">
+  <h3>Gamswild</h3>
+  <button onclick="setWild('Gamswild','Bock')">Bock</button>
+  <button onclick="setWild('Gamswild','Geiß')">Geiß</button>
+  <button onclick="setWild('Gamswild','Jahrling')">Jahrling</button>
+  <button onclick="setWild('Gamswild','Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- ANDERE -->
+<div id="andere" class="hidden">
+  <h3>Andere Wildart</h3>
+  <input id="andereInput">
+  <button onclick="setAndere()">Weiter</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- GEWICHT -->
 <div id="gewicht" class="hidden">
   <h3>Gewicht (kg)</h3>
   <select id="inputGewicht"></select>
   <button onclick="nextOrt()">Weiter</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<!-- 📍 ORT -->
+<!-- ORT -->
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
-
-  <button onclick="openMaps()">📍 Prad (Google Maps öffnen)</button>
+  <button onclick="openMaps()">Prad</button>
   <button onclick="zeigeAndereOrt()">Andere</button>
 
   <div id="andereOrtBox" class="hidden">
-    <input id="inputOrt" placeholder="Google Maps Link oder Ort einfügen">
+    <input id="inputOrt" placeholder="Koordinaten oder Maps-Link einfügen">
     <button onclick="setOrt()">Weiter</button>
   </div>
 
+  <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
 </div>
@@ -206,22 +247,53 @@ function setWild(a,d){
   zeigeSeite("gewicht");
 }
 
+function setAndere(){
+  let v=andereInput.value.trim();
+  if(!v) return alert("Bitte Wildart eingeben!");
+  e.wildart="Andere";
+  e.wild=v;
+  zeigeSeite("gewicht");
+}
+
 function nextOrt(){
   e.gewicht=inputGewicht.value;
   zeigeSeite("ort");
 }
 
-/* 📍 Google Maps öffnen */
+/* Maps öffnen */
 function openMaps(){
-  window.open("https://www.google.com/maps", "_blank");
+  window.open("https://www.google.com/maps","_blank");
   document.getElementById("andereOrtBox").classList.remove("hidden");
 }
 
-/* Ort speichern */
+function zeigeAndereOrt(){
+  document.getElementById("andereOrtBox").classList.remove("hidden");
+}
+
+/* Koordinaten erkennen */
+function extractCoords(input){
+  let m=input.match(/(-?\d+\.\d+)[, ]+(-?\d+\.\d+)/);
+  if(m) return {lat:m[1],lng:m[2]};
+
+  m=input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if(m) return {lat:m[1],lng:m[2]};
+
+  return null;
+}
+
 function setOrt(){
   let v=inputOrt.value.trim();
-  if(!v) return alert("Bitte Ort oder Link eingeben!");
-  e.ort=v;
+  if(!v) return alert("Bitte Ort eingeben!");
+
+  let coords=extractCoords(v);
+
+  if(coords){
+    e.lat=coords.lat;
+    e.lng=coords.lng;
+    e.ort="Koordinaten";
+  } else {
+    e.ort=v;
+  }
 
   daten.push(e);
   speichern();
@@ -231,7 +303,10 @@ function setOrt(){
   zeigeSeite("revier");
 }
 
-/* Tabelle */
+function mapsLink(lat,lng){
+  return `https://www.google.com/maps?q=${lat},${lng}`;
+}
+
 function anzeigen(){
   let t=document.getElementById("tabelle");
   t.innerHTML=`
@@ -248,8 +323,8 @@ function anzeigen(){
 
     let ort=r.insertCell(4);
 
-    if(d.ort && d.ort.startsWith("http")){
-      ort.innerHTML=`<span class="link" onclick="window.open('${d.ort}')">📍 Karte öffnen</span>`;
+    if(d.lat){
+      ort.innerHTML=`<span class="link" onclick="window.open('${mapsLink(d.lat,d.lng)}')">📍 Karte öffnen</span>`;
     } else {
       ort.innerText=d.ort;
     }
