@@ -254,6 +254,7 @@ input, select {
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 let aktuellerPunkt = null;
+let mapMode = "input"; // NEU
 
 for(let i=0;i<=200;i++){
  let opt=document.createElement("option");
@@ -310,7 +311,7 @@ function nextOrt(){
 
 function setOrt(o){
  if(o==="Prad"){
-  openMap();
+  openMap("input");
  } else {
   e.ort=o;
   zeigeSeite("zeit");
@@ -354,7 +355,9 @@ function finish(v){
 }
 
 /* Karte */
-function openMap(){
+function openMap(mode="input"){
+ mapMode = mode;
+
  let popup=document.getElementById("mapPopup");
  popup.classList.remove("hidden");
  popup.querySelectorAll(".marker").forEach(m=>m.remove());
@@ -366,9 +369,16 @@ function openMap(){
 
 function closeMap(){
  document.getElementById("mapPopup").classList.add("hidden");
+
+ if(mapMode === "view"){
+  zeigeSeite("revier");
+  return;
+ }
+
  if(aktuellerPunkt){
   e.koord=aktuellerPunkt;
  }
+
  e.ort="Prad";
  zeigeSeite("zeit");
 }
@@ -395,6 +405,8 @@ function drawMarker(x,y,wildart){
 }
 
 document.getElementById("mapImage").addEventListener("click",function(ev){
+ if(mapMode==="view") return; // 👉 verhindert ändern im Anzeige-Modus
+
  let rect=this.getBoundingClientRect();
  let x=ev.clientX-rect.left;
  let y=ev.clientY-rect.top;
@@ -405,7 +417,7 @@ document.getElementById("mapImage").addEventListener("click",function(ev){
 
 function openMapFromTable(i){
  let eintrag=daten[i];
- openMap();
+ openMap("view");
 
  setTimeout(()=>{
   if(eintrag.koord){
