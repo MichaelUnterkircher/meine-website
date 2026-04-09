@@ -12,12 +12,12 @@ body {
   background:#2e7d32;
   display:flex;
   justify-content:center;
-  padding:20px;
+  padding:10px;
 }
 
 .container {
   background:white;
-  padding:20px;
+  padding:15px;
   border-radius:15px;
   width:100%;
   max-width:1000px;
@@ -28,17 +28,19 @@ body {
 .topbar {
   display:flex;
   gap:10px;
-  margin-bottom:15px;
+  margin-bottom:10px;
 }
+
+.topbar button { flex:1; }
 
 button {
   padding:12px;
+  margin:5px 0;
   border:none;
   border-radius:10px;
   background:#2e7d32;
   color:white;
   font-size:16px;
-  cursor:pointer;
 }
 
 .table-wrapper {
@@ -49,11 +51,12 @@ table {
   width:100%;
   border-collapse:collapse;
   font-size:14px;
+  min-width:900px;
 }
 
 th,td {
   border:1px solid #ccc;
-  padding:8px;
+  padding:5px;
   text-align:center;
 }
 
@@ -62,21 +65,44 @@ th {
   color:white;
 }
 
+/* Entnommen */
 .entnommen-btn {
   background:red;
-  padding:5px 10px;
+  color:white;
   border-radius:6px;
+  padding:4px 8px;
   cursor:pointer;
+  font-weight:bold;
 }
 
+.entnommen-done {
+  background:#e8f5e9;
+}
+
+/* Abfall */
 .abfall-btn {
   background:blue;
-  padding:5px 10px;
+  color:white;
   border-radius:6px;
+  padding:4px 8px;
   cursor:pointer;
+  font-weight:bold;
 }
 
-.abfall-box {
+.abfall-ja { background:#4caf50; color:white; }
+.abfall-nein { background:#f44336; color:white; }
+.abfall-grau { background:#ccc; }
+
+input {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+/* Popup */
+.popup {
   position:fixed;
   top:50%;
   left:50%;
@@ -85,18 +111,8 @@ th {
   padding:20px;
   border-radius:10px;
   box-shadow:0 0 20px rgba(0,0,0,0.3);
+  z-index:1000;
   width:300px;
-}
-
-.abfall-box button {
-  width:100%;
-  margin-top:10px;
-}
-
-input {
-  width:100%;
-  padding:10px;
-  margin-top:10px;
 }
 </style>
 </head>
@@ -105,15 +121,27 @@ input {
 
 <div class="container">
 
+<!-- START -->
 <div id="start">
   <h2>Abschussliste Jagdrevier Prad</h2>
   <div>Zahlencode: 1024</div>
 
+  <img src="491438944_10226782024328158_4391837002889702168_n.jpg" style="width:180px;display:block;margin:auto;">
+
   <div class="topbar">
+    <button onclick="zeigeSeite('park')">Park</button>
     <button onclick="zeigeSeite('revier')">Revier</button>
   </div>
 </div>
 
+<!-- PARK -->
+<div id="park" class="hidden">
+  <h2>Park</h2>
+  <p>noch nicht aktiv</p>
+  <button onclick="zeigeSeite('start')">⬅ Zurück</button>
+</div>
+
+<!-- REVIER -->
 <div id="revier" class="hidden">
   <div class="topbar">
     <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
@@ -125,37 +153,69 @@ input {
   </div>
 </div>
 
-<!-- Eingabe -->
+<!-- NAME -->
 <div id="name" class="hidden">
-  <h3>Name</h3>
+  <h3>Name Erleger</h3>
   <input id="inputName">
   <button onclick="nextWild()">Weiter</button>
+  <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
+<!-- WILD -->
 <div id="wild" class="hidden">
   <h3>Wildart</h3>
-  <button onclick="setWild('Rehwild')">Rehwild</button>
-  <button onclick="setWild('Rotwild')">Rotwild</button>
+  <button onclick="zeigeSeite('reh')">Rehwild</button>
+  <button onclick="zeigeSeite('hirsch')">Rotwild</button>
   <button onclick="zeigeSeite('gams')">Gamswild</button>
   <button onclick="setWild('Wildschwein')">Wildschwein</button>
   <button onclick="setWild('Hase')">Hase</button>
   <button onclick="zeigeSeite('andere')">Andere</button>
+  <button onclick="zeigeSeite('name')">⬅ Zurück</button>
 </div>
 
+<!-- REH -->
+<div id="reh" class="hidden">
+  <h3>Rehwild</h3>
+  <button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
+  <button onclick="setWildDetail('Rehwild','J-Bock')">J-Bock</button>
+  <button onclick="setWildDetail('Rehwild','Geiß')">Geiß</button>
+  <button onclick="setWildDetail('Rehwild','Schmalgeiß')">Schmalgeiß</button>
+  <button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- HIRSCH -->
+<div id="hirsch" class="hidden">
+  <h3>Rotwild</h3>
+  <button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
+  <button onclick="setWildDetail('Rotwild','J-Hirsch')">J-Hirsch</button>
+  <button onclick="setWildDetail('Rotwild','Tier')">Tier</button>
+  <button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
+  <button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<!-- GAMS -->
 <div id="gams" class="hidden">
   <h3>Gamswild</h3>
   <button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
   <button onclick="setWildDetail('Gamswild','Geiß')">Geiß</button>
   <button onclick="setWildDetail('Gamswild','Jahrling')">Jahrling</button>
   <button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
+<!-- ANDERE -->
 <div id="andere" class="hidden">
+  <h3>Andere Wildart</h3>
   <input id="andereInput">
   <button onclick="setAndere()">Weiter</button>
+  <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
+<!-- WEITER -->
 <div id="gewicht" class="hidden">
+  <h3>Gewicht</h3>
   <input id="inputGewicht" type="number">
   <button onclick="nextOrt()">Weiter</button>
 </div>
@@ -172,17 +232,7 @@ input {
 
 <div id="datum" class="hidden">
   <input type="date" id="inputDatum">
-  <button onclick="finish()">Fertig</button>
-</div>
-
-<!-- Abfall Popup -->
-<div id="abfallBox" class="abfall-box hidden">
-  <p><b>ACHTUNG!</b><br>
-  Der Dienst der Abfallentsorgung durch das Revier ist nur in der Zeit der Parkjagd aufrecht.<br>
-  Kosten: 5€</p>
-
-  <button onclick="setAbfall('ja')">Ja</button>
-  <button onclick="setAbfall('nein')">Nein</button>
+  <button onclick="finish('Eigengebrauch')">Fertig</button>
 </div>
 
 </div>
@@ -190,7 +240,6 @@ input {
 <script>
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
-let currentIndex = null;
 
 function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
 
@@ -200,93 +249,81 @@ function zeigeSeite(id){
 }
 
 function nextWild(){
-  e.name=inputName.value;
+  e.name=inputName.value.trim();
+  if(!e.name) return alert("Name fehlt");
   zeigeSeite("wild");
 }
 
 function setWild(w){
   e.wildart=w;
-  e.wilddetail="";
+  e.wild="";
   zeigeSeite("gewicht");
 }
 
-function setWildDetail(w,detail){
-  e.wildart=w;
-  e.wilddetail=detail;
+function setWildDetail(art, detail){
+  e.wildart=art;
+  e.wild=detail;
   zeigeSeite("gewicht");
 }
 
 function setAndere(){
   e.wildart=andereInput.value;
-  e.wilddetail="";
+  e.wild="";
   zeigeSeite("gewicht");
 }
 
-function nextOrt(){
-  e.gewicht=inputGewicht.value;
-  zeigeSeite("ort");
-}
+function nextOrt(){ e.gewicht=inputGewicht.value; zeigeSeite("ort"); }
+function nextZeit(){ e.ort=inputOrt.value; zeigeSeite("zeit"); }
+function nextDatum(){ e.zeit=inputZeit.value; zeigeSeite("datum"); }
 
-function nextZeit(){
-  e.ort=inputOrt.value;
-  zeigeSeite("zeit");
-}
-
-function nextDatum(){
-  e.zeit=inputZeit.value;
-  zeigeSeite("datum");
-}
-
-function finish(){
+function finish(v){
   e.datum=inputDatum.value;
   e.abfall=null;
   daten.push(e);
-  speichern();
-  anzeigen();
-  e={};
+  speichern(); anzeigen(); e={};
   zeigeSeite("revier");
 }
 
-function openAbfall(i){
-  currentIndex=i;
-  document.getElementById("abfallBox").classList.remove("hidden");
+/* ABFALL POPUP */
+function handleAbfall(i){
+  let box=document.createElement("div");
+  box.className="popup";
+  box.innerHTML=`
+  <b>ACHTUNG!</b><br><br>
+  Der Dienst der Abfallentsorgung durch das Revier ist nur in der Zeit der Parkjagd aufrecht.<br><br>
+  Betrag: 5€<br><br>
+  <button onclick="setAbfall(${i},'ja')">Ja</button>
+  <button onclick="setAbfall(${i},'nein')">Nein</button>
+  `;
+  document.body.appendChild(box);
 }
 
-function setAbfall(val){
-  daten[currentIndex].abfall=val;
-  speichern();
-  anzeigen();
-  document.getElementById("abfallBox").classList.add("hidden");
+function setAbfall(i,val){
+  daten[i].abfall=val;
+  speichern(); anzeigen();
+  document.querySelector(".popup").remove();
 }
 
 function anzeigen(){
   let t=document.getElementById("tabelle");
   t.innerHTML=`
   <tr>
-  <th>Name</th>
-  <th>Wildart</th>
-  <th>kg</th>
-  <th>Ort</th>
-  <th>Zeit</th>
-  <th>Datum</th>
-  <th>Abfall</th>
-  </tr>`;
+  <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
+  <th>Zeit</th><th>Datum</th><th>Abfall</th></tr>`;
 
   daten.forEach((d,i)=>{
     let r=t.insertRow();
-
     r.insertCell(0).innerText=d.name;
-    r.insertCell(1).innerText=d.wilddetail 
-      ? d.wildart+"; "+d.wilddetail 
-      : d.wildart;
-    r.insertCell(2).innerText=d.gewicht;
-    r.insertCell(3).innerText=d.ort;
-    r.insertCell(4).innerText=d.zeit;
-    r.insertCell(5).innerText=d.datum;
+    r.insertCell(1).innerText=d.wildart;
+    r.insertCell(2).innerText=d.wild;
+    r.insertCell(3).innerText=d.gewicht;
+    r.insertCell(4).innerText=d.ort;
+    r.insertCell(5).innerText=d.zeit;
+    r.insertCell(6).innerText=d.datum;
 
-    let ab=r.insertCell(6);
-    if(d.abfall===null){
-      ab.innerHTML=`<span class="abfall-btn" onclick="openAbfall(${i})">+</span>`;
+    let ab=r.insertCell(7);
+    if(d.abfall==null){
+      ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
     } else {
       ab.innerText=d.abfall;
     }
