@@ -107,6 +107,24 @@ input, select {
   z-index:1000;
   width:320px;
 }
+
+/* 🗺️ Karte */
+.map-container {
+  position:relative;
+}
+
+.map-container img {
+  width:100%;
+  border-radius:10px;
+}
+
+.marker {
+  position:absolute;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  transform:translate(-50%, -50%);
+}
 </style>
 </head>
 
@@ -206,7 +224,7 @@ input, select {
 
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
-  <button onclick="setOrt('Prad')">Prad</button>
+  <button onclick="zeigeKarte()">Prad</button>
   <button onclick="zeigeAndereOrt()">Andere</button>
 
   <div id="andereOrtBox" class="hidden">
@@ -217,25 +235,17 @@ input, select {
   <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
-<div id="zeit" class="hidden">
-  <h3>Schusszeit</h3>
-  <input type="time" id="inputZeit">
-  <button onclick="nextDatum()">Weiter</button>
+<!-- 🗺️ KARTENSEITE -->
+<div id="karte" class="hidden">
+  <h3>Punkt setzen</h3>
+
+  <div class="map-container" onclick="setPoint(event)">
+    <img src="karte.png" id="mapImage">
+    <div id="marker" class="marker"></div>
+  </div>
+
+  <button onclick="savePoint()">Weiter</button>
   <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
-</div>
-
-<div id="datum" class="hidden">
-  <h3>Eingelagert Datum</h3>
-  <input type="date" id="inputDatum">
-  <button onclick="nextVerwendung()">Weiter</button>
-  <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
-</div>
-
-<div id="verwendung" class="hidden">
-  <h3>Verwendung</h3>
-  <button onclick="finish('Eigengebrauch')">Eigengebrauch</button>
-  <button onclick="finish('Verkauf')">Verkauf</button>
-  <button onclick="zeigeSeite('datum')">⬅ Zurück</button>
 </div>
 
 </div>
@@ -243,7 +253,9 @@ input, select {
 <script>
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
+let posX=null, posY=null;
 
+/* Gewicht */
 for(let i=0;i<=200;i++){
   let opt=document.createElement("option");
   opt.value=i;
@@ -253,7 +265,6 @@ for(let i=0;i<=200;i++){
 
 function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
 
-/* ✅ FIX */
 function zeigeSeite(id){
   document.querySelectorAll("div[id]").forEach(d=>{
     d.classList.add("hidden");
@@ -271,33 +282,39 @@ function nextWild(){
   zeigeSeite("wild");
 }
 
-function setWild(w){
-  e.wildart=w;
-  e.wild="";
-  zeigeSeite("gewicht");
-}
-
-function setWildDetail(a,d){
-  e.wildart=a;
-  e.wild=d;
-  zeigeSeite("gewicht");
-}
+function setWild(w){ e.wildart=w; e.wild=""; zeigeSeite("gewicht"); }
+function setWildDetail(a,d){ e.wildart=a; e.wild=d; zeigeSeite("gewicht"); }
 
 function setAndere(){
   let v=andereInput.value.trim();
   if(!v) return alert("Bitte Wildart eingeben!");
-  e.wildart=v;
-  e.wild="";
-  zeigeSeite("gewicht");
+  e.wildart=v; e.wild=""; zeigeSeite("gewicht");
 }
 
-function nextOrt(){
-  e.gewicht=inputGewicht.value;
-  zeigeSeite("ort");
+function nextOrt(){ e.gewicht=inputGewicht.value; zeigeSeite("ort"); }
+
+function zeigeKarte(){ zeigeSeite("karte"); }
+
+function setPoint(event){
+  let rect=mapImage.getBoundingClientRect();
+  posX=(event.clientX-rect.left)/rect.width;
+  posY=(event.clientY-rect.top)/rect.height;
+
+  let m=document.getElementById("marker");
+  m.style.left=(posX*100)+"%";
+  m.style.top=(posY*100)+"%";
+
+  /* Farbe */
+  if(e.wildart==="Rotwild") m.style.background="red";
+  else if(e.wildart==="Rehwild") m.style.background="green";
+  else m.style.background="blue";
 }
 
-function setOrt(o){
-  e.ort=o;
+function savePoint(){
+  if(posX===null) return alert("Bitte Punkt wählen!");
+  e.ort="📍 Karte";
+  e.x=posX;
+  e.y=posY;
   zeigeSeite("zeit");
 }
 
@@ -348,42 +365,18 @@ function setEntnommen(i,val){
   }
 }
 
-function handleAbfall(i){
-  let box=document.createElement("div");
-  box.className="popup";
-  box.innerHTML=`
-  <b>ACHTUNG!</b><br><br>
-  Die Abfallentsorgung durch das Revier ist nur während der Parkjagd sichergestellt.<br><br>
-  Hierfür ist eine Gebühr von 5 € zu entrichten.<br><br>
-  Sollten zu einem späteren Zeitpunkt erneut Abfälle anfallen (z. B. beim Zerwirken), ist diese Gebühr nochmals zu entrichten.<br><br>
-  <button onclick="setAbfall(${i},'bezahlt')">Ja</button>
-  <button onclick="setAbfall(${i},'nein')">Nein</button>
-  `;
-  document.body.appendChild(box);
-}
-
-function setAbfall(i,val){
-  daten[i].abfall=val;
-  speichern(); anzeigen();
-  document.querySelector(".popup").remove();
-}
-
 function formatDatum(d){
   if(!d) return "";
   let date=new Date(d);
-  let tag=String(date.getDate()).padStart(2,'0');
-  let monat=String(date.getMonth()+1).padStart(2,'0');
-  let jahr=date.getFullYear();
-  return `${tag}.${monat}.${jahr}`;
+  return String(date.getDate()).padStart(2,'0')+"."+String(date.getMonth()+1).padStart(2,'0')+"."+date.getFullYear();
 }
 
 function anzeigen(){
   let t=document.getElementById("tabelle");
-  t.innerHTML=`
-  <tr>
+  t.innerHTML=`<tr>
   <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
   <th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th>
-  <th>Verwendung</th><th>Abfall</th></tr>`;
+  <th>Verwendung</th></tr>`;
 
   daten.forEach((d,i)=>{
     let r=t.insertRow();
@@ -391,32 +384,41 @@ function anzeigen(){
     r.insertCell(1).innerText=d.wildart;
     r.insertCell(2).innerText=d.wild;
     r.insertCell(3).innerText=d.gewicht;
-    r.insertCell(4).innerText=d.ort;
+
+    let ort=r.insertCell(4);
+    if(d.x){
+      ort.innerHTML=`<span onclick="showPoint(${i})" style="color:blue;cursor:pointer;">📍 Karte</span>`;
+    } else {
+      ort.innerText=d.ort;
+    }
+
     r.insertCell(5).innerText=d.zeit;
     r.insertCell(6).innerText=formatDatum(d.datum);
 
     let ent=r.insertCell(7);
     if(!d.entnommen){
       ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
-      <input type="date" id="date${i}" style="display:none;margin-top:5px;" onchange="setEntnommen(${i},this.value)">`;
+      <input type="date" id="date${i}" style="display:none" onchange="setEntnommen(${i},this.value)">`;
     } else {
       ent.innerText=formatDatum(d.entnommen);
       ent.className="entnommen-done";
     }
 
     r.insertCell(8).innerText=d.verwendung;
-
-    let ab=r.insertCell(9);
-    if(d.abfall===null){
-      ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
-    } else if(d.abfall==="nein"){
-      ab.innerText="Nein";
-      ab.className="abfall-grau";
-    } else {
-      ab.innerText="Ja";
-      ab.className="abfall-ja";
-    }
   });
+}
+
+function showPoint(i){
+  zeigeSeite("karte");
+  setTimeout(()=>{
+    let m=document.getElementById("marker");
+    m.style.left=(daten[i].x*100)+"%";
+    m.style.top=(daten[i].y*100)+"%";
+
+    if(daten[i].wildart==="Rotwild") m.style.background="red";
+    else if(daten[i].wildart==="Rehwild") m.style.background="green";
+    else m.style.background="blue";
+  },100);
 }
 
 anzeigen();
