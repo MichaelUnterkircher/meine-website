@@ -147,7 +147,6 @@ input, select {
   </div>
 </div>
 
-<!-- Eingabe bleibt gleich -->
 <div id="name" class="hidden">
   <h3>Name Erleger</h3>
   <input id="inputName">
@@ -211,8 +210,14 @@ input, select {
 
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
-  <input id="inputOrt">
-  <button onclick="nextZeit()">Weiter</button>
+  <button onclick="setOrt('Prad')">Prad</button>
+  <button onclick="zeigeAndereOrt()">Andere</button>
+
+  <div id="andereOrtBox" class="hidden">
+    <input id="inputOrt" placeholder="Ort eingeben">
+    <button onclick="setAndereOrt()">Weiter</button>
+  </div>
+
   <button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
@@ -243,22 +248,11 @@ input, select {
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 
-/* Gewicht füllen */
 for(let i=0;i<=200;i++){
   let opt=document.createElement("option");
   opt.value=i;
   opt.text=i+" kg";
   inputGewicht.appendChild(opt);
-}
-
-/* ROBUSTE DATUM FORMATIERUNG */
-function formatDatum(d){
-  if(!d) return "";
-  let date = new Date(d);
-  let tag = String(date.getDate()).padStart(2,'0');
-  let monat = String(date.getMonth()+1).padStart(2,'0');
-  let jahr = date.getFullYear();
-  return `${tag}.${monat}.${jahr}`;
 }
 
 function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
@@ -300,7 +294,16 @@ function nextOrt(){
   zeigeSeite("ort");
 }
 
-function nextZeit(){
+function setOrt(o){
+  e.ort=o;
+  zeigeSeite("zeit");
+}
+
+function zeigeAndereOrt(){
+  document.getElementById("andereOrtBox").classList.remove("hidden");
+}
+
+function setAndereOrt(){
   let v=inputOrt.value.trim();
   if(!v) return alert("Bitte Ort eingeben!");
   e.ort=v;
@@ -331,8 +334,8 @@ function finish(v){
 }
 
 function openDate(i){
-  let el = document.getElementById("date"+i);
-  if (el.showPicker) el.showPicker();
+  let el=document.getElementById("date"+i);
+  if(el.showPicker) el.showPicker();
   else { el.style.display="block"; el.focus(); }
 }
 
@@ -343,7 +346,7 @@ function setEntnommen(i,val){
   }
 }
 
-/* Abfall */
+/* ✅ NEUER TEXT */
 function handleAbfall(i){
   let box=document.createElement("div");
   box.className="popup";
@@ -362,6 +365,15 @@ function setAbfall(i,val){
   daten[i].abfall=val;
   speichern(); anzeigen();
   document.querySelector(".popup").remove();
+}
+
+function formatDatum(d){
+  if(!d) return "";
+  let date=new Date(d);
+  let tag=String(date.getDate()).padStart(2,'0');
+  let monat=String(date.getMonth()+1).padStart(2,'0');
+  let jahr=date.getFullYear();
+  return `${tag}.${monat}.${jahr}`;
 }
 
 function anzeigen(){
