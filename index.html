@@ -262,6 +262,13 @@ function zeigeSeite(id){
   document.getElementById(id).classList.remove("hidden");
 }
 
+/* DATUM FORMAT */
+function formatDatum(d){
+  if(!d) return "";
+  let [y,m,day] = d.split("-");
+  return day+"."+m+"."+y;
+}
+
 function nextWild(){
   let v=inputName.value.trim();
   if(!v) return alert("Bitte Name eingeben!");
@@ -324,7 +331,6 @@ function finish(v){
   zeigeSeite("revier");
 }
 
-/* FIX: Entnahme funktioniert überall */
 function openDate(i){
   let el = document.getElementById("date"+i);
   if (el.showPicker) {
@@ -379,14 +385,14 @@ function anzeigen(){
     r.insertCell(3).innerText=d.gewicht;
     r.insertCell(4).innerText=d.ort;
     r.insertCell(5).innerText=d.zeit;
-    r.insertCell(6).innerText=d.datum;
+    r.insertCell(6).innerText=formatDatum(d.datum);
 
     let ent=r.insertCell(7);
     if(!d.entnommen){
       ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
       <input type="date" id="date${i}" style="display:none;margin-top:5px;" onchange="setEntnommen(${i},this.value)">`;
     } else {
-      ent.innerText=d.entnommen;
+      ent.innerText=formatDatum(d.entnommen);
       ent.className="entnommen-done";
     }
 
