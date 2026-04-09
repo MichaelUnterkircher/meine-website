@@ -111,6 +111,12 @@ input, select {
   z-index:1000;
   width:320px;
 }
+
+.link {
+  color:blue;
+  text-decoration:underline;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -208,13 +214,14 @@ input, select {
   <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
+<!-- 🔥 ORT erweitert -->
 <div id="ort" class="hidden">
   <h3>Örtlichkeit</h3>
   <button onclick="setOrt('Prad')">Prad</button>
   <button onclick="zeigeAndereOrt()">Andere</button>
 
   <div id="andereOrtBox" class="hidden">
-    <input id="inputOrt" placeholder="Ort eingeben">
+    <input id="inputOrt" placeholder="Koordinaten oder Maps-Link einfügen">
     <button onclick="setAndereOrt()">Weiter</button>
   </div>
 
@@ -294,20 +301,51 @@ function nextOrt(){
   zeigeSeite("ort");
 }
 
+/* 🔥 NEU */
 function setOrt(o){
-  e.ort=o;
-  zeigeSeite("zeit");
+  if(o==="Prad"){
+    window.open("https://www.google.com/maps","_blank");
+    document.getElementById("andereOrtBox").classList.remove("hidden");
+  } else {
+    e.ort=o;
+    zeigeSeite("zeit");
+  }
 }
 
 function zeigeAndereOrt(){
   document.getElementById("andereOrtBox").classList.remove("hidden");
 }
 
+/* 🔥 Koordinaten erkennen */
+function extractCoords(input){
+  let m=input.match(/(-?\d+\.\d+)[, ]+(-?\d+\.\d+)/);
+  if(m) return {lat:m[1],lng:m[2]};
+
+  m=input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if(m) return {lat:m[1],lng:m[2]};
+
+  return null;
+}
+
 function setAndereOrt(){
   let v=inputOrt.value.trim();
   if(!v) return alert("Bitte Ort eingeben!");
-  e.ort=v;
+
+  let coords=extractCoords(v);
+
+  if(coords){
+    e.lat=coords.lat;
+    e.lng=coords.lng;
+    e.ort="Koordinaten";
+  } else {
+    e.ort=v;
+  }
+
   zeigeSeite("zeit");
+}
+
+function mapsLink(lat,lng){
+  return `https://www.google.com/maps?q=${lat},${lng}`;
 }
 
 function nextDatum(){
@@ -346,7 +384,7 @@ function setEntnommen(i,val){
   }
 }
 
-/* ✅ NEUER TEXT */
+/* Abfall */
 function handleAbfall(i){
   let box=document.createElement("div");
   box.className="popup";
@@ -390,7 +428,14 @@ function anzeigen(){
     r.insertCell(1).innerText=d.wildart;
     r.insertCell(2).innerText=d.wild;
     r.insertCell(3).innerText=d.gewicht;
-    r.insertCell(4).innerText=d.ort;
+
+    let ort=r.insertCell(4);
+    if(d.lat){
+      ort.innerHTML=`<span class="link" onclick="window.open('${mapsLink(d.lat,d.lng)}')">📍 Karte</span>`;
+    } else {
+      ort.innerText=d.ort;
+    }
+
     r.insertCell(5).innerText=d.zeit;
     r.insertCell(6).innerText=formatDatum(d.datum);
 
