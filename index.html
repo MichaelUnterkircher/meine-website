@@ -105,7 +105,6 @@ input, select {
   width:320px;
 }
 
-/* Marker kleiner */
 .marker {
   position:absolute;
   width:6px;
@@ -222,14 +221,14 @@ input, select {
 
 <div id="zeit" class="hidden">
 <h3>Schusszeit</h3>
-<input type="time" id="inputZeit">
+<input type="time" id="inputZeit" onchange="autoZeit()">
 <button onclick="nextDatum()">Weiter</button>
 <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
 <div id="datum" class="hidden">
 <h3>Eingelagert Datum</h3>
-<input type="date" id="inputDatum">
+<input type="date" id="inputDatum" onchange="autoDatum()">
 <button onclick="nextVerwendung()">Weiter</button>
 <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
 </div>
@@ -340,10 +339,24 @@ function nextDatum(){
  zeigeSeite("datum");
 }
 
+function autoZeit(){
+ let v = inputZeit.value;
+ if(!v) return;
+ e.zeit = v;
+ zeigeSeite("datum");
+}
+
 function nextVerwendung(){
  let v=inputDatum.value;
  if(!v) return alert("Bitte Datum!");
  e.datum=v;
+ zeigeSeite("verwendung");
+}
+
+function autoDatum(){
+ let v = inputDatum.value;
+ if(!v) return;
+ e.datum = v;
  zeigeSeite("verwendung");
 }
 
