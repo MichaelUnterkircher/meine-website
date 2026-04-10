@@ -121,7 +121,7 @@ input, select {
 
 <div id="start">
 <h2>Abschussliste Jagdrevier Prad</h2>
-<div>Zahlencode: 6789</div>
+<div>Zahlencode: 1024</div>
 <img src="491438944_10226782024328158_4391837002889702168_n.jpg" style="width:180px;display:block;margin:auto;">
 <div class="topbar">
 <button onclick="zeigeSeite('park')">Park</button>
@@ -139,6 +139,7 @@ input, select {
 <div class="topbar">
 <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
 <button onclick="openMapAll()">🗺️ Karte</button>
+<button onclick="openYearSelect()">📅 Jahr</button>
 <button onclick="zeigeSeite('start')">⬅ Zurück</button>
 </div>
 <div class="table-wrapper">
@@ -153,94 +154,12 @@ input, select {
 <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
 
-<div id="wild" class="hidden">
-<h3>Wildart</h3>
-<button onclick="zeigeSeite('reh')">Rehwild</button>
-<button onclick="zeigeSeite('hirsch')">Rotwild</button>
-<button onclick="zeigeSeite('gams')">Gamswild</button>
-<button onclick="setWild('Fuchs')">Fuchs</button>
-<button onclick="setWild('Hase')">Hase</button>
-<button onclick="zeigeSeite('andere')">Andere</button>
-<button onclick="zeigeSeite('name')">⬅ Zurück</button>
-</div>
-
-<div id="reh" class="hidden">
-<h3>Rehwild</h3>
-<button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
-<button onclick="setWildDetail('Rehwild','J-Bock')">J-Bock</button>
-<button onclick="setWildDetail('Rehwild','Geiß')">Geiß</button>
-<button onclick="setWildDetail('Rehwild','Schmalgeiß')">Schmalgeiß</button>
-<button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="hirsch" class="hidden">
-<h3>Rotwild</h3>
-<button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
-<button onclick="setWildDetail('Rotwild','J-Hirsch')">J-Hirsch</button>
-<button onclick="setWildDetail('Rotwild','Tier')">Tier</button>
-<button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
-<button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="gams" class="hidden">
-<h3>Gamswild</h3>
-<button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
-<button onclick="setWildDetail('Gamswild','Geiß')">Geiß</button>
-<button onclick="setWildDetail('Gamswild','Jahrling')">Jahrling</button>
-<button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="andere" class="hidden">
-<h3>Andere Wildart</h3>
-<input id="andereInput">
-<button onclick="setAndere()">Weiter</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="gewicht" class="hidden">
-<h3>Gewicht (kg)</h3>
-<select id="inputGewicht" onchange="autoGewicht()"></select>
-<button onclick="nextOrt()">Weiter</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="ort" class="hidden">
-<h3>Örtlichkeit</h3>
-<button onclick="setOrt('Prad')">Prad</button>
-<button onclick="zeigeAndereOrt()">Andere</button>
-
-<div id="andereOrtBox" class="hidden">
-<input id="inputOrt" placeholder="Ort eingeben">
-<button onclick="setAndereOrt()">Weiter</button>
-</div>
-
-<button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
-</div>
-
-<div id="zeit" class="hidden">
-<h3>Schusszeit</h3>
-<input type="time" id="inputZeit" onchange="autoZeit()">
-<button onclick="nextDatum()">Weiter</button>
-<button onclick="zeigeSeite('ort')">⬅ Zurück</button>
-</div>
-
-<div id="datum" class="hidden">
-<h3>Eingelagert Datum</h3>
-<input type="date" id="inputDatum" onchange="autoDatum()">
-<button onclick="nextVerwendung()">Weiter</button>
-<button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
-</div>
-
-<div id="verwendung" class="hidden">
-<h3>Verwendung</h3>
-<button onclick="finish('Eigengebrauch')">Eigengebrauch</button>
-<button onclick="finish('Verkauf')">Verkauf</button>
-<button onclick="zeigeSeite('datum')">⬅ Zurück</button>
-</div>
-
+<!-- Jahr Auswahl -->
+<div id="yearPopup" class="popup hidden">
+<h3>Jahr auswählen</h3>
+<select id="yearSelect" size="6" style="height:150px;"></select>
+<button onclick="setYear()">OK</button>
+<button onclick="closeYear()">Abbrechen</button>
 </div>
 
 <!-- Karte -->
@@ -258,224 +177,65 @@ let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
 
-for(let i=0;i<=200;i++){
- let opt=document.createElement("option");
- opt.value=i;
- opt.text=i+" kg";
- inputGewicht.appendChild(opt);
-}
+/* NEU: aktuelles Jahr als Standard */
+let selectedYear = new Date().getFullYear();
 
-function autoGewicht(){
- let v=inputGewicht.value;
- if(!v) return;
- e.gewicht=v;
- zeigeSeite("ort");
-}
+/* Jahr Popup */
+function openYearSelect(){
+ let box=document.getElementById("yearPopup");
+ let sel=document.getElementById("yearSelect");
+ sel.innerHTML="";
 
-function speichern(){
- localStorage.setItem("daten", JSON.stringify(daten));
-}
+ let years=[...new Set(daten.map(d=> new Date(d.datum).getFullYear()))];
 
-function zeigeSeite(id){
- document.querySelectorAll("div[id]").forEach(d=>{
-  d.classList.add("hidden");
-  d.style.display="";
+ /* sicherstellen dass aktuelles Jahr auch drin ist */
+ if(!years.includes(selectedYear)){
+  years.push(selectedYear);
+ }
+
+ years.sort((a,b)=>b-a);
+
+ years.forEach(y=>{
+  let o=document.createElement("option");
+  o.value=y;
+  o.text=y;
+  if(y===selectedYear) o.selected=true;
+  sel.appendChild(o);
  });
- let el=document.getElementById(id);
- el.classList.remove("hidden");
- el.style.display="block";
+
+ box.classList.remove("hidden");
 }
 
-function nextWild(){
- let v=inputName.value.trim();
- if(!v) return alert("Bitte Name eingeben!");
- e.name=v;
- zeigeSeite("wild");
-}
-
-function setWild(w){
- e.wildart=w;
- e.wild="";
- if(w==="Fuchs" || w==="Hase"){
-  e.gewicht="";
-  zeigeSeite("ort");
- } else {
-  zeigeSeite("gewicht");
+function setYear(){
+ let v=document.getElementById("yearSelect").value;
+ if(v){
+  selectedYear = parseInt(v);
  }
-}
-
-function setWildDetail(a,d){
- e.wildart=a;
- e.wild=d;
- zeigeSeite("gewicht");
-}
-
-function setAndere(){
- let v=andereInput.value.trim();
- if(!v) return alert("Bitte Wildart eingeben!");
- e.wildart=v;
- e.wild="";
- zeigeSeite("gewicht");
-}
-
-function nextOrt(){
- e.gewicht=inputGewicht.value;
- zeigeSeite("ort");
-}
-
-function setOrt(o){
- if(o==="Prad"){
-  openMap("input");
- } else {
-  e.ort=o;
-  zeigeSeite("zeit");
- }
-}
-
-function zeigeAndereOrt(){
- document.getElementById("andereOrtBox").classList.remove("hidden");
-}
-
-function setAndereOrt(){
- let v=inputOrt.value.trim();
- if(!v) return alert("Bitte Ort eingeben!");
- e.ort=v;
- zeigeSeite("zeit");
-}
-
-function nextDatum(){
- let v=inputZeit.value;
- if(!v) return alert("Bitte Schusszeit!");
- e.zeit=v;
- zeigeSeite("datum");
-}
-
-function autoZeit(){
- let v=inputZeit.value;
- if(!v) return;
- e.zeit=v;
- zeigeSeite("datum");
-}
-
-function nextVerwendung(){
- let v=inputDatum.value;
- if(!v) return alert("Bitte Datum!");
- e.datum=v;
-
- if(e.wildart==="Fuchs"){
-  finish("");
- } else {
-  zeigeSeite("verwendung");
- }
-}
-
-function autoDatum(){
- let v=inputDatum.value;
- if(!v) return;
- e.datum=v;
-
- if(e.wildart==="Fuchs"){
-  finish("");
- } else {
-  zeigeSeite("verwendung");
- }
-}
-
-function finish(v){
- e.verwendung=v;
- e.entnommen="";
- e.abfall=null;
- daten.push(e);
- speichern();
+ closeYear();
  anzeigen();
- e={};
- zeigeSeite("revier");
+}
+
+function closeYear(){
+ document.getElementById("yearPopup").classList.add("hidden");
+}
+
+/* Filter */
+function filterData(){
+ return daten.filter(d=> new Date(d.datum).getFullYear()===selectedYear);
 }
 
 /* Karte */
-function openMap(mode="input"){
- mapMode = mode;
-
- let popup=document.getElementById("mapPopup");
- popup.classList.remove("hidden");
- popup.querySelectorAll(".marker").forEach(m=>m.remove());
-
- if(e.koord){
-  drawMarker(e.koord.x,e.koord.y,e.wildart);
- }
-}
-
-/* NEU: Alle Punkte anzeigen */
 function openMapAll(){
  mapMode = "view";
-
  let popup=document.getElementById("mapPopup");
  popup.classList.remove("hidden");
  popup.querySelectorAll(".marker").forEach(m=>m.remove());
 
- daten.forEach(d=>{
+ filterData().forEach(d=>{
   if(d.koord){
    drawMarker(d.koord.x,d.koord.y,d.wildart);
   }
  });
-}
-
-function closeMap(){
- document.getElementById("mapPopup").classList.add("hidden");
-
- if(mapMode === "view"){
-  zeigeSeite("revier");
-  return;
- }
-
- if(aktuellerPunkt){
-  e.koord=aktuellerPunkt;
- }
-
- e.ort="Prad";
- zeigeSeite("zeit");
-}
-
-function drawMarker(x,y,wildart){
- let container=document.getElementById("mapImage").parentElement;
-
- let marker=document.createElement("div");
- marker.className="marker";
-
- if(wildart==="Rehwild"){
-  marker.style.background="yellow";
- } else if(wildart==="Rotwild"){
-  marker.style.background="red";
- } else {
-  marker.style.background="blue";
- }
-
- marker.style.left=x+"px";
- marker.style.top=y+"px";
-
- container.appendChild(marker);
-}
-
-document.getElementById("mapImage").addEventListener("click",function(ev){
- if(mapMode==="view") return;
-
- let rect=this.getBoundingClientRect();
- let x=ev.clientX-rect.left;
- let y=ev.clientY-rect.top;
-
- aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
- drawMarker(x,y,e.wildart);
-});
-
-function openMapFromTable(i){
- let eintrag=daten[i];
- openMap("view");
-
- setTimeout(()=>{
-  if(eintrag.koord){
-   drawMarker(eintrag.koord.x,eintrag.koord.y,eintrag.wildart);
-  }
- },100);
 }
 
 /* Tabelle */
@@ -486,81 +246,19 @@ function anzeigen(){
  <th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th>
  <th>Verwendung</th><th>Abfall</th></tr>`;
 
- daten.forEach((d,i)=>{
+ filterData().forEach((d,i)=>{
  let r=t.insertRow();
  r.insertCell(0).innerText=d.name;
  r.insertCell(1).innerText=d.wildart;
  r.insertCell(2).innerText=d.wild;
  r.insertCell(3).innerText=d.gewicht;
-
- if(d.ort==="Prad" && d.koord){
-  r.insertCell(4).innerHTML=`<span style="color:blue;cursor:pointer;" onclick="openMapFromTable(${i})">Prad (Karte)</span>`;
- } else {
-  r.insertCell(4).innerText=d.ort;
- }
-
+ r.insertCell(4).innerText=d.ort;
  r.insertCell(5).innerText=d.zeit;
- r.insertCell(6).innerText=formatDatum(d.datum);
-
- let ent=r.insertCell(7);
- if(!d.entnommen){
-  ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
-  <input type="date" id="date${i}" style="display:none;" onchange="setEntnommen(${i},this.value)">`;
- } else {
-  ent.innerText=formatDatum(d.entnommen);
-  ent.className="entnommen-done";
- }
-
+ r.insertCell(6).innerText=d.datum;
+ r.insertCell(7).innerText=d.entnommen||"";
  r.insertCell(8).innerText=d.verwendung;
-
- let ab=r.insertCell(9);
- if(d.abfall===null){
-  ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
- } else if(d.abfall==="nein"){
-  ab.innerText="Nein";
-  ab.className="abfall-grau";
- } else {
-  ab.innerText="Ja";
-  ab.className="abfall-ja";
- }
+ r.insertCell(9).innerText=d.abfall||"";
  });
-}
-
-function formatDatum(d){
- if(!d) return "";
- let date=new Date(d);
- return `${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}.${date.getFullYear()}`;
-}
-
-function openDate(i){
- let el=document.getElementById("date"+i);
- if(el.showPicker) el.showPicker();
- else { el.style.display="block"; el.focus(); }
-}
-
-function setEntnommen(i,val){
- if(val){
-  daten[i].entnommen=val;
-  speichern();
-  anzeigen();
- }
-}
-
-function handleAbfall(i){
- let box=document.createElement("div");
- box.className="popup";
- box.innerHTML=`ACHTUNG!<br><br>
- Abfall nur während Parkjagd<br><br>
- <button onclick="setAbfall(${i},'bezahlt')">Ja</button>
- <button onclick="setAbfall(${i},'nein')">Nein</button>`;
- document.body.appendChild(box);
-}
-
-function setAbfall(i,val){
- daten[i].abfall=val;
- speichern();
- anzeigen();
- document.querySelector(".popup").remove();
 }
 
 anzeigen();
