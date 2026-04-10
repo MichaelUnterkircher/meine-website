@@ -92,13 +92,6 @@ input, select {
   border:1px solid #ccc;
 }
 
-.year-select {
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
-}
-
 .popup {
   position:fixed;
   top:50%;
@@ -146,18 +139,11 @@ input, select {
 <div class="topbar">
 <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
 <button onclick="zeigeSeite('start')">⬅ Zurück</button>
-<button onclick="openMapAll()">🗺 Karte</button>
-<button onclick="toggleYear()">📅 Jahr</button>
 </div>
-
-<select id="yearSelect" class="year-select hidden" onchange="changeYear()"></select>
-
 <div class="table-wrapper">
 <table id="tabelle"></table>
 </div>
 </div>
-
-<!-- ALLE DEINE FORMULAR-SEITEN (UNVERÄNDERT!) -->
 
 <div id="name" class="hidden">
 <h3>Name Erleger</h3>
@@ -254,11 +240,13 @@ input, select {
 <button onclick="zeigeSeite('datum')">⬅ Zurück</button>
 </div>
 
+</div>
+
 <!-- Karte -->
 <div id="mapPopup" class="popup hidden">
 <h3>Karte Prad</h3>
 <div style="position:relative;">
-<img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%;cursor:crosshair;">
+  <img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%;cursor:crosshair;">
 </div>
 <button onclick="closeMap()">OK</button>
 </div>
@@ -268,65 +256,215 @@ let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
-let aktuellesJahr = new Date().getFullYear();
 
-/* JAHR */
-function toggleYear(){
- document.getElementById("yearSelect").classList.toggle("hidden");
+for(let i=0;i<=200;i++){
+ let opt=document.createElement("option");
+ opt.value=i;
+ opt.text=i+" kg";
+ inputGewicht.appendChild(opt);
 }
 
-function initYears(){
- let sel=document.getElementById("yearSelect");
- sel.innerHTML="";
- let jahre=[...new Set(daten.map(d=> new Date(d.datum).getFullYear()))];
- jahre.sort((a,b)=>b-a);
- jahre.forEach(j=>{
-  let opt=document.createElement("option");
-  opt.value=j;
-  opt.text=j;
-  if(j==aktuellesJahr) opt.selected=true;
-  sel.appendChild(opt);
+function autoGewicht(){
+ let v=inputGewicht.value;
+ if(!v) return;
+ e.gewicht=v;
+ zeigeSeite("ort");
+}
+
+function speichern(){
+ localStorage.setItem("daten", JSON.stringify(daten));
+}
+
+function zeigeSeite(id){
+ document.querySelectorAll("div[id]").forEach(d=>{
+  d.classList.add("hidden");
+  d.style.display="";
  });
+ let el=document.getElementById(id);
+ el.classList.remove("hidden");
+ el.style.display="block";
 }
 
-function changeYear(){
- aktuellesJahr=parseInt(document.getElementById("yearSelect").value);
+function nextWild(){
+ let v=inputName.value.trim();
+ if(!v) return alert("Bitte Name eingeben!");
+ e.name=v;
+ zeigeSeite("wild");
+}
+
+function setWild(w){
+ e.wildart=w;
+ e.wild="";
+ if(w==="Fuchs" || w==="Hase"){
+  e.gewicht="";
+  zeigeSeite("ort");
+ } else {
+  zeigeSeite("gewicht");
+ }
+}
+
+function setWildDetail(a,d){
+ e.wildart=a;
+ e.wild=d;
+ zeigeSeite("gewicht");
+}
+
+function setAndere(){
+ let v=andereInput.value.trim();
+ if(!v) return alert("Bitte Wildart eingeben!");
+ e.wildart=v;
+ e.wild="";
+ zeigeSeite("gewicht");
+}
+
+function nextOrt(){
+ e.gewicht=inputGewicht.value;
+ zeigeSeite("ort");
+}
+
+function setOrt(o){
+ if(o==="Prad"){
+  openMap("input");
+ } else {
+  e.ort=o;
+  zeigeSeite("zeit");
+ }
+}
+
+function zeigeAndereOrt(){
+ document.getElementById("andereOrtBox").classList.remove("hidden");
+}
+
+function setAndereOrt(){
+ let v=inputOrt.value.trim();
+ if(!v) return alert("Bitte Ort eingeben!");
+ e.ort=v;
+ zeigeSeite("zeit");
+}
+
+function nextDatum(){
+ let v=inputZeit.value;
+ if(!v) return alert("Bitte Schusszeit!");
+ e.zeit=v;
+ zeigeSeite("datum");
+}
+
+function autoZeit(){
+ let v=inputZeit.value;
+ if(!v) return;
+ e.zeit=v;
+ zeigeSeite("datum");
+}
+
+function nextVerwendung(){
+ let v=inputDatum.value;
+ if(!v) return alert("Bitte Datum!");
+ e.datum=v;
+
+ if(e.wildart==="Fuchs"){
+  finish("");
+ } else {
+  zeigeSeite("verwendung");
+ }
+}
+
+function autoDatum(){
+ let v=inputDatum.value;
+ if(!v) return;
+ e.datum=v;
+
+ if(e.wildart==="Fuchs"){
+  finish("");
+ } else {
+  zeigeSeite("verwendung");
+ }
+}
+
+function finish(v){
+ e.verwendung=v;
+ e.entnommen="";
+ e.abfall=null;
+ daten.push(e);
+ speichern();
  anzeigen();
+ e={};
+ zeigeSeite("revier");
 }
 
-/* REST DEINES ORIGINAL JS (UNVERÄNDERT) */
-// (Ich habe ihn hier bewusst nicht verändert – alles bleibt wie bei dir)
+/* Karte */
+function openMap(mode="input"){
+ mapMode = mode;
 
-/* ERWEITERUNG: KARTE ALLE PUNKTE */
-function openMapAll(){
+ let popup=document.getElementById("mapPopup");
+ popup.classList.remove("hidden");
+ popup.querySelectorAll(".marker").forEach(m=>m.remove());
+
+ if(e.koord){
+  drawMarker(e.koord.x,e.koord.y,e.wildart);
+ }
+}
+
+function closeMap(){
+ document.getElementById("mapPopup").classList.add("hidden");
+
+ if(mapMode === "view"){
+  zeigeSeite("revier");
+  return;
+ }
+
+ if(aktuellerPunkt){
+  e.koord=aktuellerPunkt;
+ }
+
+ e.ort="Prad";
+ zeigeSeite("zeit");
+}
+
+function drawMarker(x,y,wildart){
+ let container=document.getElementById("mapImage").parentElement;
+
+ let marker=document.createElement("div");
+ marker.className="marker";
+
+ if(wildart==="Rehwild"){
+  marker.style.background="yellow";
+ } else if(wildart==="Rotwild"){
+  marker.style.background="red";
+ } else {
+  marker.style.background="blue";
+ }
+
+ marker.style.left=x+"px";
+ marker.style.top=y+"px";
+
+ container.querySelectorAll(".marker").forEach(m=>m.remove());
+ container.appendChild(marker);
+}
+
+document.getElementById("mapImage").addEventListener("click",function(ev){
+ if(mapMode==="view") return;
+
+ let rect=this.getBoundingClientRect();
+ let x=ev.clientX-rect.left;
+ let y=ev.clientY-rect.top;
+
+ aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
+ drawMarker(x,y,e.wildart);
+});
+
+function openMapFromTable(i){
+ let eintrag=daten[i];
  openMap("view");
+
  setTimeout(()=>{
-  let container=document.getElementById("mapImage").parentElement;
-  container.querySelectorAll(".marker").forEach(m=>m.remove());
-
-  daten.forEach(d=>{
-   if(!d.koord) return;
-   let jahr=new Date(d.datum).getFullYear();
-   if(jahr!==aktuellesJahr) return;
-
-   let marker=document.createElement("div");
-   marker.className="marker";
-
-   if(d.wildart==="Rehwild") marker.style.background="yellow";
-   else if(d.wildart==="Rotwild") marker.style.background="red";
-   else marker.style.background="blue";
-
-   marker.style.left=d.koord.x+"px";
-   marker.style.top=d.koord.y+"px";
-
-   container.appendChild(marker);
-  });
+  if(eintrag.koord){
+   drawMarker(eintrag.koord.x,eintrag.koord.y,eintrag.wildart);
+  }
  },100);
 }
 
-/* FILTER IN TABELLE */
-const originalAnzeigen = anzeigen;
-anzeigen = function(){
+/* Tabelle */
+function anzeigen(){
  let t=document.getElementById("tabelle");
  t.innerHTML=`<tr>
  <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
@@ -334,49 +472,82 @@ anzeigen = function(){
  <th>Verwendung</th><th>Abfall</th></tr>`;
 
  daten.forEach((d,i)=>{
-  let jahr=new Date(d.datum).getFullYear();
-  if(jahr!==aktuellesJahr) return;
+ let r=t.insertRow();
+ r.insertCell(0).innerText=d.name;
+ r.insertCell(1).innerText=d.wildart;
+ r.insertCell(2).innerText=d.wild;
+ r.insertCell(3).innerText=d.gewicht;
 
-  let r=t.insertRow();
-  r.insertCell(0).innerText=d.name;
-  r.insertCell(1).innerText=d.wildart;
-  r.insertCell(2).innerText=d.wild;
-  r.insertCell(3).innerText=d.gewicht;
+ if(d.ort==="Prad" && d.koord){
+  r.insertCell(4).innerHTML=`<span style="color:blue;cursor:pointer;" onclick="openMapFromTable(${i})">Prad (Karte)</span>`;
+ } else {
+  r.insertCell(4).innerText=d.ort;
+ }
 
-  if(d.ort==="Prad" && d.koord){
-   r.insertCell(4).innerHTML=`<span style="color:blue;cursor:pointer;" onclick="openMapFromTable(${i})">Prad (Karte)</span>`;
-  } else {
-   r.insertCell(4).innerText=d.ort;
-  }
+ r.insertCell(5).innerText=d.zeit;
+ r.insertCell(6).innerText=formatDatum(d.datum);
 
-  r.insertCell(5).innerText=d.zeit;
-  r.insertCell(6).innerText=formatDatum(d.datum);
+ let ent=r.insertCell(7);
+ if(!d.entnommen){
+  ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
+  <input type="date" id="date${i}" style="display:none;" onchange="setEntnommen(${i},this.value)">`;
+ } else {
+  ent.innerText=formatDatum(d.entnommen);
+  ent.className="entnommen-done";
+ }
 
-  let ent=r.insertCell(7);
-  if(!d.entnommen){
-   ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
-   <input type="date" id="date${i}" style="display:none;" onchange="setEntnommen(${i},this.value)">`;
-  } else {
-   ent.innerText=formatDatum(d.entnommen);
-   ent.className="entnommen-done";
-  }
+ r.insertCell(8).innerText=d.verwendung;
 
-  r.insertCell(8).innerText=d.verwendung;
-
-  let ab=r.insertCell(9);
-  if(d.abfall===null){
-   ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
-  } else if(d.abfall==="nein"){
-   ab.innerText="Nein";
-   ab.className="abfall-grau";
-  } else {
-   ab.innerText="Ja";
-   ab.className="abfall-ja";
-  }
+ let ab=r.insertCell(9);
+ if(d.abfall===null){
+  ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
+ } else if(d.abfall==="nein"){
+  ab.innerText="Nein";
+  ab.className="abfall-grau";
+ } else {
+  ab.innerText="Ja";
+  ab.className="abfall-ja";
+ }
  });
 }
 
-initYears();
+function formatDatum(d){
+ if(!d) return "";
+ let date=new Date(d);
+ return `${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}.${date.getFullYear()}`;
+}
+
+function openDate(i){
+ let el=document.getElementById("date"+i);
+ if(el.showPicker) el.showPicker();
+ else { el.style.display="block"; el.focus(); }
+}
+
+function setEntnommen(i,val){
+ if(val){
+  daten[i].entnommen=val;
+  speichern();
+  anzeigen();
+ }
+}
+
+function handleAbfall(i){
+ let box=document.createElement("div");
+ box.className="popup";
+ box.innerHTML=`ACHTUNG!<br><br>
+ Abfall nur während Parkjagd<br><br>
+ <button onclick="setAbfall(${i},'bezahlt')">Ja</button>
+ <button onclick="setAbfall(${i},'nein')">Nein</button>`;
+ document.body.appendChild(box);
+}
+
+function setAbfall(i,val){
+ daten[i].abfall=val;
+ speichern();
+ anzeigen();
+ document.querySelector(".popup").remove();
+}
+
 anzeigen();
 </script>
 
