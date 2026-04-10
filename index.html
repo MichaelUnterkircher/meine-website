@@ -105,7 +105,7 @@ input, select {
   width:320px;
 }
 
-/* Marker kleiner + Rand */
+/* Marker kleiner */
 .marker {
   position:absolute;
   width:6px;
@@ -247,13 +247,8 @@ input, select {
 <div id="mapPopup" class="popup hidden">
 <h3>Karte Prad</h3>
 
-<div style="position:relative; overflow:hidden;">
-  <img id="mapImage" src="Revier.png" style="width:100%;cursor:crosshair; transform-origin:center;">
-</div>
-
-<div style="display:flex; gap:10px; margin-top:10px;">
-  <button onclick="zoomIn()">+</button>
-  <button onclick="zoomOut()">-</button>
+<div style="position:relative;">
+  <img id="mapImage" src="Revier.png" style="width:100%;cursor:crosshair;">
 </div>
 
 <button onclick="closeMap()">OK</button>
@@ -264,7 +259,6 @@ let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
-let zoomLevel = 1;
 
 for(let i=0;i<=200;i++){
  let opt=document.createElement("option");
@@ -434,23 +428,6 @@ function openMapFromTable(i){
    drawMarker(eintrag.koord.x,eintrag.koord.y,eintrag.wildart);
   }
  },100);
-}
-
-/* Zoom */
-function zoomIn(){
- zoomLevel += 0.2;
- applyZoom();
-}
-
-function zoomOut(){
- zoomLevel -= 0.2;
- if(zoomLevel < 1) zoomLevel = 1;
- applyZoom();
-}
-
-function applyZoom(){
- let img=document.getElementById("mapImage");
- img.style.transform="scale("+zoomLevel+")";
 }
 
 /* Tabelle */
