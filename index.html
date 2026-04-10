@@ -121,7 +121,7 @@ input, select {
 
 <div id="start">
 <h2>Abschussliste Jagdrevier Prad</h2>
-<div>Zahlencode: 1024</div>
+<div>Zahlencode: 6789</div>
 <img src="491438944_10226782024328158_4391837002889702168_n.jpg" style="width:180px;display:block;margin:auto;">
 <div class="topbar">
 <button onclick="zeigeSeite('park')">Park</button>
@@ -138,6 +138,7 @@ input, select {
 <div id="revier" class="hidden">
 <div class="topbar">
 <button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
+<button onclick="openMapAll()">🗺️ Karte</button>
 <button onclick="zeigeSeite('start')">⬅ Zurück</button>
 </div>
 <div class="table-wrapper">
@@ -404,6 +405,21 @@ function openMap(mode="input"){
  }
 }
 
+/* NEU: Alle Punkte anzeigen */
+function openMapAll(){
+ mapMode = "view";
+
+ let popup=document.getElementById("mapPopup");
+ popup.classList.remove("hidden");
+ popup.querySelectorAll(".marker").forEach(m=>m.remove());
+
+ daten.forEach(d=>{
+  if(d.koord){
+   drawMarker(d.koord.x,d.koord.y,d.wildart);
+  }
+ });
+}
+
 function closeMap(){
  document.getElementById("mapPopup").classList.add("hidden");
 
@@ -437,7 +453,6 @@ function drawMarker(x,y,wildart){
  marker.style.left=x+"px";
  marker.style.top=y+"px";
 
- container.querySelectorAll(".marker").forEach(m=>m.remove());
  container.appendChild(marker);
 }
 
