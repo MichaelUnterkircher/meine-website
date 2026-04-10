@@ -6,91 +6,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#2e7d32;
-  display:flex;
-  justify-content:center;
-  padding:10px;
-}
-.container {
-  background:white;
-  padding:15px;
-  border-radius:15px;
-  width:100%;
-  max-width:600px;
-}
+body { margin:0; font-family: Arial; background:#2e7d32; display:flex; justify-content:center; padding:10px; }
+.container { background:white; padding:15px; border-radius:15px; width:100%; max-width:600px; }
 .hidden { display:none; }
 
-.topbar {
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
+.topbar { display:flex; gap:10px; margin-bottom:10px; }
 .topbar button { flex:1; }
 
-button {
-  padding:12px;
-  margin:5px 0;
-  border:none;
-  border-radius:10px;
-  background:#2e7d32;
-  color:white;
-  font-size:16px;
-}
+button { padding:12px; margin:5px 0; border:none; border-radius:10px; background:#2e7d32; color:white; font-size:16px; }
 
 .table-wrapper { overflow-x:auto; }
 
-table {
-  width:100%;
-  border-collapse:collapse;
-  font-size:12px;
-  min-width:950px;
-}
+table { width:100%; border-collapse:collapse; font-size:12px; min-width:950px; }
 
-th,td {
-  border:1px solid #ccc;
-  padding:5px;
-  text-align:center;
-}
+th,td { border:1px solid #ccc; padding:5px; text-align:center; }
+th { background:#2e7d32; color:white; }
 
-th {
-  background:#2e7d32;
-  color:white;
-}
-
-.entnommen-btn {
-  background:red;
-  color:white;
-  border-radius:6px;
-  padding:4px 8px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
+.entnommen-btn { background:red; color:white; border-radius:6px; padding:4px 8px; cursor:pointer; font-weight:bold; }
 .entnommen-done { background:#e8f5e9; }
 
-.abfall-btn {
-  background:blue;
-  color:white;
-  border-radius:6px;
-  padding:4px 8px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
+.abfall-btn { background:blue; color:white; border-radius:6px; padding:4px 8px; cursor:pointer; font-weight:bold; }
 .abfall-ja { background:#4caf50; color:white; }
 .abfall-nein { background:#f44336; color:white; }
 .abfall-grau { background:#ccc; }
 
-input, select {
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
+input, select { width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ccc; }
 
 .popup {
   position:fixed;
@@ -107,8 +47,8 @@ input, select {
 
 .marker {
   position:absolute;
-  width:5px;
-  height:5px;
+  width:4px;
+  height:4px;
   border-radius:50%;
   transform:translate(-50%,-50%);
   border:1px solid black;
@@ -192,16 +132,9 @@ input, select {
 <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
-<div id="andere" class="hidden">
-<h3>Andere Wildart</h3>
-<input id="andereInput">
-<button onclick="setAndere()">Weiter</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
 <div id="gewicht" class="hidden">
 <h3>Gewicht (kg)</h3>
-<select id="inputGewicht" onchange="autoGewicht()"></select>
+<select id="inputGewicht"></select>
 <button onclick="nextOrt()">Weiter</button>
 <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
@@ -212,7 +145,7 @@ input, select {
 <button onclick="zeigeAndereOrt()">Andere</button>
 
 <div id="andereOrtBox" class="hidden">
-<input id="inputOrt" placeholder="Ort eingeben">
+<input id="inputOrt">
 <button onclick="setAndereOrt()">Weiter</button>
 </div>
 
@@ -221,14 +154,14 @@ input, select {
 
 <div id="zeit" class="hidden">
 <h3>Schusszeit</h3>
-<input type="time" id="inputZeit" onchange="autoZeit()">
+<input type="time" id="inputZeit">
 <button onclick="nextDatum()">Weiter</button>
 <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
 <div id="datum" class="hidden">
 <h3>Eingelagert Datum</h3>
-<input type="date" id="inputDatum" onchange="autoDatum()">
+<input type="date" id="inputDatum">
 <button onclick="nextVerwendung()">Weiter</button>
 <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
 </div>
@@ -246,13 +179,128 @@ input, select {
 <div id="mapPopup" class="popup hidden">
 <h3>Karte Prad</h3>
 <div style="position:relative;">
-  <img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%;cursor:crosshair;">
+<img id="mapImage"
+src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png"
+style="width:100%;cursor:crosshair;">
 </div>
 <button onclick="closeMap()">OK</button>
 </div>
 
 <script>
-/* JS bleibt unverändert */
+let daten = JSON.parse(localStorage.getItem("daten")) || [];
+let e = {};
+let aktuellerPunkt = null;
+let mapMode = "input";
+
+for(let i=0;i<=200;i++){
+ let opt=document.createElement("option");
+ opt.value=i;
+ opt.text=i+" kg";
+ inputGewicht.appendChild(opt);
+}
+
+function speichern(){ localStorage.setItem("daten", JSON.stringify(daten)); }
+
+function zeigeSeite(id){
+ document.querySelectorAll("div[id]").forEach(d=>{
+  d.classList.add("hidden");
+  d.style.display="";
+ });
+ let el=document.getElementById(id);
+ el.classList.remove("hidden");
+ el.style.display="block";
+}
+
+function nextWild(){
+ let v=inputName.value.trim();
+ if(!v) return alert("Bitte Name eingeben!");
+ e.name=v;
+ zeigeSeite("wild");
+}
+
+function setWild(w){ e.wildart=w; e.wild=""; zeigeSeite("gewicht"); }
+
+function setWildDetail(a,d){ e.wildart=a; e.wild=d; zeigeSeite("gewicht"); }
+
+function nextOrt(){ e.gewicht=inputGewicht.value; zeigeSeite("ort"); }
+
+function setOrt(o){
+ if(o==="Prad"){ openMap("input"); }
+ else { e.ort=o; zeigeSeite("zeit"); }
+}
+
+function zeigeAndereOrt(){
+ document.getElementById("andereOrtBox").classList.remove("hidden");
+}
+
+function setAndereOrt(){
+ let v=inputOrt.value.trim();
+ if(!v) return alert("Bitte Ort eingeben!");
+ e.ort=v;
+ zeigeSeite("zeit");
+}
+
+function nextDatum(){
+ let v=inputZeit.value;
+ if(!v) return alert("Bitte Schusszeit!");
+ e.zeit=v;
+ zeigeSeite("datum");
+}
+
+function nextVerwendung(){
+ let v=inputDatum.value;
+ if(!v) return alert("Bitte Datum!");
+ e.datum=v;
+ zeigeSeite("verwendung");
+}
+
+function finish(v){
+ e.verwendung=v;
+ daten.push(e);
+ speichern();
+ anzeigen();
+ e={};
+ zeigeSeite("revier");
+}
+
+/* Karte */
+function openMap(mode="input"){
+ mapMode = mode;
+ let popup=document.getElementById("mapPopup");
+ popup.classList.remove("hidden");
+ popup.querySelectorAll(".marker").forEach(m=>m.remove());
+}
+
+function closeMap(){
+ document.getElementById("mapPopup").classList.add("hidden");
+ if(mapMode==="view"){ zeigeSeite("revier"); return; }
+ if(aktuellerPunkt){ e.koord=aktuellerPunkt; }
+ e.ort="Prad";
+ zeigeSeite("zeit");
+}
+
+document.getElementById("mapImage").addEventListener("click",function(ev){
+ if(mapMode==="view") return;
+ let rect=this.getBoundingClientRect();
+ let x=ev.clientX-rect.left;
+ let y=ev.clientY-rect.top;
+ aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
+});
+
+/* Tabelle */
+function anzeigen(){
+ let t=document.getElementById("tabelle");
+ t.innerHTML="<tr><th>Name</th><th>Wildart</th><th>kg</th><th>Ort</th></tr>";
+ daten.forEach((d,i)=>{
+ let r=t.insertRow();
+ r.insertCell(0).innerText=d.name;
+ r.insertCell(1).innerText=d.wildart;
+ r.insertCell(2).innerText=d.gewicht;
+ r.insertCell(3).innerText=d.ort;
+ });
+}
+
+anzeigen();
 </script>
 
 </body>
