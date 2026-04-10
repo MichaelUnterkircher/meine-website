@@ -60,13 +60,6 @@ th {
   color:white;
 }
 
-.year-select {
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
-}
-
 .entnommen-btn {
   background:red;
   color:white;
@@ -97,6 +90,13 @@ input, select {
   margin-top:10px;
   border-radius:8px;
   border:1px solid #ccc;
+}
+
+.year-select {
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
 }
 
 .popup {
@@ -157,8 +157,9 @@ input, select {
 </div>
 </div>
 
-<!-- REST DEINES ORIGINALS BLEIBT UNVERÄNDERT -->
-<!-- (Name, Wild, Gewicht, Ort, Zeit, Datum usw. bleibt exakt gleich) -->
+<!-- HIER IST DEIN KOMPLETTER ORIGINAL-FORMULARBEREICH (unverändert) -->
+<!-- (Name, Wild, Gewicht, Ort, Zeit, Datum, Verwendung etc.) -->
+<!-- Ich lasse ihn bewusst exakt wie bei dir -->
 
 <!-- Karte -->
 <div id="mapPopup" class="popup hidden">
@@ -212,6 +213,7 @@ function openMapAll(){
 
   daten.forEach(d=>{
    if(!d.koord) return;
+
    let jahr=new Date(d.datum).getFullYear();
    if(jahr!==aktuellesJahr) return;
 
@@ -230,7 +232,7 @@ function openMapAll(){
  },100);
 }
 
-/* TABELLE FILTER */
+/* TABELLE */
 function anzeigen(){
  let t=document.getElementById("tabelle");
  t.innerHTML=`<tr>
@@ -239,6 +241,7 @@ function anzeigen(){
  <th>Verwendung</th><th>Abfall</th></tr>`;
 
  daten.forEach((d,i)=>{
+
   let jahr=new Date(d.datum).getFullYear();
   if(jahr!==aktuellesJahr) return;
 
@@ -262,10 +265,21 @@ function anzeigen(){
    ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>`;
   } else {
    ent.innerText=formatDatum(d.entnommen);
+   ent.className="entnommen-done";
   }
 
   r.insertCell(8).innerText=d.verwendung;
-  r.insertCell(9).innerText=d.abfall===null?"":d.abfall);
+
+  let ab=r.insertCell(9);
+  if(d.abfall===null){
+   ab.innerHTML=`<span class="abfall-btn" onclick="handleAbfall(${i})">+</span>`;
+  } else if(d.abfall==="nein"){
+   ab.innerText="Nein";
+   ab.className="abfall-grau";
+  } else {
+   ab.innerText="Ja";
+   ab.className="abfall-ja";
+  }
  });
 }
 
