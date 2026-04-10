@@ -163,42 +163,6 @@ input, select {
 <button onclick="zeigeSeite('name')">⬅ Zurück</button>
 </div>
 
-<div id="reh" class="hidden">
-<h3>Rehwild</h3>
-<button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
-<button onclick="setWildDetail('Rehwild','J-Bock')">J-Bock</button>
-<button onclick="setWildDetail('Rehwild','Geiß')">Geiß</button>
-<button onclick="setWildDetail('Rehwild','Schmalgeiß')">Schmalgeiß</button>
-<button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="hirsch" class="hidden">
-<h3>Rotwild</h3>
-<button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
-<button onclick="setWildDetail('Rotwild','J-Hirsch')">J-Hirsch</button>
-<button onclick="setWildDetail('Rotwild','Tier')">Tier</button>
-<button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
-<button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="gams" class="hidden">
-<h3>Gamswild</h3>
-<button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
-<button onclick="setWildDetail('Gamswild','Geiß')">Geiß</button>
-<button onclick="setWildDetail('Gamswild','Jahrling')">Jahrling</button>
-<button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
-<div id="andere" class="hidden">
-<h3>Andere Wildart</h3>
-<input id="andereInput">
-<button onclick="setAndere()">Weiter</button>
-<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
-</div>
-
 <div id="gewicht" class="hidden">
 <h3>Gewicht (kg)</h3>
 <select id="inputGewicht" onchange="autoGewicht()"></select>
@@ -245,7 +209,7 @@ input, select {
 <div id="mapPopup" class="popup hidden">
 <h3>Karte Prad</h3>
 <div style="position:relative;">
-  <img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%;cursor:crosshair;">
+<img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%;cursor:crosshair;">
 </div>
 <button onclick="closeMap()">OK</button>
 </div>
@@ -263,34 +227,6 @@ for(let i=0;i<=200;i++){
  inputGewicht.appendChild(opt);
 }
 
-function autoGewicht(){
- let v=inputGewicht.value;
- if(!v) return;
- e.gewicht=v;
- zeigeSeite("ort");
-}
-
-function speichern(){
- localStorage.setItem("daten", JSON.stringify(daten));
-}
-
-function zeigeSeite(id){
- document.querySelectorAll("div[id]").forEach(d=>{
-  d.classList.add("hidden");
-  d.style.display="";
- });
- let el=document.getElementById(id);
- el.classList.remove("hidden");
- el.style.display="block";
-}
-
-function nextWild(){
- let v=inputName.value.trim();
- if(!v) return alert("Bitte Name eingeben!");
- e.name=v;
- zeigeSeite("wild");
-}
-
 function setWild(w){
  e.wildart=w;
  e.wild="";
@@ -302,25 +238,6 @@ function setWild(w){
  }
 }
 
-function setWildDetail(a,d){
- e.wildart=a;
- e.wild=d;
- zeigeSeite("gewicht");
-}
-
-function setAndere(){
- let v=andereInput.value.trim();
- if(!v) return alert("Bitte Wildart eingeben!");
- e.wildart=v;
- e.wild="";
- zeigeSeite("gewicht");
-}
-
-function nextOrt(){
- e.gewicht=inputGewicht.value;
- zeigeSeite("ort");
-}
-
 function setOrt(o){
  if(o==="Prad"){
   openMap("input");
@@ -330,27 +247,9 @@ function setOrt(o){
  }
 }
 
-function zeigeAndereOrt(){
- document.getElementById("andereOrtBox").classList.remove("hidden");
-}
-
-function setAndereOrt(){
- let v=inputOrt.value.trim();
- if(!v) return alert("Bitte Ort eingeben!");
- e.ort=v;
- zeigeSeite("zeit");
-}
-
 function nextDatum(){
  let v=inputZeit.value;
  if(!v) return alert("Bitte Schusszeit!");
- e.zeit=v;
- zeigeSeite("datum");
-}
-
-function autoZeit(){
- let v=inputZeit.value;
- if(!v) return;
  e.zeit=v;
  zeigeSeite("datum");
 }
@@ -390,7 +289,41 @@ function finish(v){
  zeigeSeite("revier");
 }
 
-/* Rest bleibt unverändert */
+/* KARTE */
+function openMap(mode="input"){
+ mapMode = mode;
+ let popup=document.getElementById("mapPopup");
+ popup.classList.remove("hidden");
+ popup.querySelectorAll(".marker").forEach(m=>m.remove());
+}
+
+function closeMap(){
+ document.getElementById("mapPopup").classList.add("hidden");
+
+ if(aktuellerPunkt){
+  e.koord=aktuellerPunkt;
+ }
+
+ e.ort="Prad";
+ zeigeSeite("zeit");
+}
+
+function drawMarker(x,y){
+ let container=document.getElementById("mapImage").parentElement;
+ let marker=document.createElement("div");
+ marker.className="marker";
+ marker.style.left=x+"px";
+ marker.style.top=y+"px";
+ container.appendChild(marker);
+}
+
+document.getElementById("mapImage").addEventListener("click",function(ev){
+ let rect=this.getBoundingClientRect();
+ let x=ev.clientX-rect.left;
+ let y=ev.clientY-rect.top;
+ aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
+ drawMarker(x,y);
+});
 </script>
 
 </body>
