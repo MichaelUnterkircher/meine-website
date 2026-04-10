@@ -8,7 +8,7 @@
 <style>
 body {
   margin:0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background:#2e7d32;
   display:flex;
   justify-content:center;
@@ -20,9 +20,8 @@ body {
   border-radius:15px;
   width:100%;
   max-width:600px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
-.hidden { display:none !important; }
+.hidden { display:none; }
 
 .topbar {
   display:flex;
@@ -39,23 +38,20 @@ button {
   background:#2e7d32;
   color:white;
   font-size:16px;
-  cursor:pointer;
-  width: 100%;
 }
-button:active { background: #1b5e20; }
 
-.table-wrapper { overflow-x:auto; margin-top: 15px; }
+.table-wrapper { overflow-x:auto; }
 
 table {
   width:100%;
   border-collapse:collapse;
   font-size:12px;
-  min-width:800px;
+  min-width:950px;
 }
 
-th, td {
+th,td {
   border:1px solid #ccc;
-  padding:8px;
+  padding:5px;
   text-align:center;
 }
 
@@ -72,15 +68,28 @@ th {
   cursor:pointer;
   font-weight:bold;
 }
-.entnommen-done { background:#e8f5e9; color: black; }
+
+.entnommen-done { background:#e8f5e9; }
+
+.abfall-btn {
+  background:blue;
+  color:white;
+  border-radius:6px;
+  padding:4px 8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.abfall-ja { background:#4caf50; color:white; }
+.abfall-nein { background:#f44336; color:white; }
+.abfall-grau { background:#ccc; }
 
 input, select {
   width:100%;
-  padding:12px;
+  padding:10px;
   margin-top:10px;
   border-radius:8px;
   border:1px solid #ccc;
-  box-sizing: border-box;
 }
 
 .popup {
@@ -91,20 +100,18 @@ input, select {
   background:white;
   padding:20px;
   border-radius:10px;
-  box-shadow:0 0 20px rgba(0,0,0,0.5);
+  box-shadow:0 0 20px rgba(0,0,0,0.3);
   z-index:1000;
-  width:90%;
-  max-width:400px;
+  width:320px;
 }
 
 .marker {
   position:absolute;
-  width:12px;
-  height:12px;
-  background: red;
+  width:5px;
+  height:5px;
   border-radius:50%;
   transform:translate(-50%,-50%);
-  border:2px solid white;
+  border:1px solid black;
 }
 </style>
 </head>
@@ -114,9 +121,9 @@ input, select {
 
 <div id="start">
 <h2>Abschussliste Jagdrevier Prad</h2>
-<div style="text-align:center; margin-bottom: 15px;">Zahlencode: 1024</div>
-<img src="491438944_10226782024328158_4391837002889702168_n.jpg" alt="Logo" style="width:180px;display:block;margin:auto;border-radius:10px;">
-<div class="topbar" style="margin-top:20px;">
+<div>Zahlencode: 1024</div>
+<img src="491438944_10226782024328158_4391837002889702168_n.jpg" style="width:180px;display:block;margin:auto;">
+<div class="topbar">
 <button onclick="zeigeSeite('park')">Park</button>
 <button onclick="zeigeSeite('revier')">Revier</button>
 </div>
@@ -130,7 +137,7 @@ input, select {
 
 <div id="revier" class="hidden">
 <div class="topbar">
-<button onclick="startNeu()">➕ Neuer Eintrag</button>
+<button onclick="zeigeSeite('name')">➕ Neuer Eintrag</button>
 <button onclick="zeigeSeite('start')">⬅ Zurück</button>
 </div>
 <div class="table-wrapper">
@@ -140,7 +147,7 @@ input, select {
 
 <div id="name" class="hidden">
 <h3>Name Erleger</h3>
-<input id="inputName" placeholder="Name eingeben...">
+<input id="inputName">
 <button onclick="nextWild()">Weiter</button>
 <button onclick="zeigeSeite('revier')">⬅ Zurück</button>
 </div>
@@ -187,41 +194,41 @@ input, select {
 
 <div id="andere" class="hidden">
 <h3>Andere Wildart</h3>
-<input id="andereInput" placeholder="Wildart eingeben...">
+<input id="andereInput">
 <button onclick="setAndere()">Weiter</button>
 <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <div id="gewicht" class="hidden">
 <h3>Gewicht (kg)</h3>
-<select id="inputGewicht" onchange="autoGewicht()">
-    <option value="">Bitte wählen...</option>
-</select>
+<select id="inputGewicht" onchange="autoGewicht()"></select>
 <button onclick="nextOrt()">Weiter</button>
 <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
 
 <div id="ort" class="hidden">
 <h3>Örtlichkeit</h3>
-<button onclick="setOrt('Prad')">Prad (Karte wählen)</button>
-<button onclick="zeigeAndereOrt()">Andere (Text)</button>
+<button onclick="setOrt('Prad')">Prad</button>
+<button onclick="zeigeAndereOrt()">Andere</button>
+
 <div id="andereOrtBox" class="hidden">
 <input id="inputOrt" placeholder="Ort eingeben">
-<button onclick="setAndereOrt()">Bestätigen</button>
+<button onclick="setAndereOrt()">Weiter</button>
 </div>
-<button onclick="zeigeSeite('gewicht')" style="background:#666; margin-top:20px;">⬅ Zurück</button>
+
+<button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
 </div>
 
 <div id="zeit" class="hidden">
 <h3>Schusszeit</h3>
-<input type="time" id="inputZeit">
+<input type="time" id="inputZeit" onchange="autoZeit()">
 <button onclick="nextDatum()">Weiter</button>
 <button onclick="zeigeSeite('ort')">⬅ Zurück</button>
 </div>
 
 <div id="datum" class="hidden">
 <h3>Eingelagert Datum</h3>
-<input type="date" id="inputDatum">
+<input type="date" id="inputDatum" onchange="autoDatum()">
 <button onclick="nextVerwendung()">Weiter</button>
 <button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
 </div>
@@ -235,201 +242,169 @@ input, select {
 
 </div>
 
-<!-- Karte Popup -->
+<!-- Karte -->
 <div id="mapPopup" class="popup hidden">
-<h3>Punkt auf Karte wählen</h3>
-<div style="position:relative; overflow: hidden; border:1px solid #000;">
-  <img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%; cursor:crosshair;" onclick="mapClick(event)">
-  <div id="mapMarker" class="marker hidden"></div>
+<h3>Karte Prad</h3>
+<div style="position:relative;">
+  <img id="mapImage" src="https://githubusercontent.com" style="width:100%;cursor:crosshair;">
 </div>
-<p style="font-size: 11px; color: #666;">Tippe auf den Erlegungsort</p>
-<button onclick="confirmMap()">OK</button>
-<button onclick="closeMap()" style="background:#666;">Abbrechen</button>
+<button onclick="closeMap()">OK</button>
 </div>
 
 <script>
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
-let tempCoords = null;
+let aktuellerPunkt = null;
+let mapMode = "input";
 
 // Gewicht-Optionen füllen
-const gewichtSelect = document.getElementById("inputGewicht");
-for(let i=1; i<=200; i++){
-  let opt = document.createElement("option");
-  opt.value = i;
-  opt.text = i + " kg";
-  gewichtSelect.appendChild(opt);
-}
-
-function zeigeSeite(id){
-  document.querySelectorAll(".container > div").forEach(d => d.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  if(id === 'revier') renderTabelle();
-}
-
-function startNeu() {
-  e = { id: Date.now(), entnommen: false };
-  document.getElementById("inputName").value = "";
-  document.getElementById("andereInput").value = "";
-  document.getElementById("inputOrt").value = "";
-  document.getElementById("inputZeit").value = "";
-  document.getElementById("inputDatum").value = new Date().toISOString().split('T')[0];
-  zeigeSeite('name');
-}
-
-function nextWild(){
-  let v = document.getElementById("inputName").value.trim();
-  if(!v) return alert("Bitte Name eingeben!");
-  e.name = v;
-  zeigeSeite("wild");
-}
-
-function setWild(w){
-  e.wildart = w;
-  e.wild = "-";
-  if(w === "Fuchs" || w === "Hase"){
-    e.gewicht = "0";
-    zeigeSeite("ort");
-  } else {
-    zeigeSeite("gewicht");
-  }
-}
-
-function setWildDetail(a, d){
-  e.wildart = a;
-  e.wild = d;
-  zeigeSeite("gewicht");
-}
-
-function setAndere(){
-  let v = document.getElementById("andereInput").value.trim();
-  if(!v) return alert("Bitte Wildart eingeben!");
-  e.wildart = v;
-  e.wild = "-";
-  zeigeSeite("gewicht");
+let selectGewicht = document.getElementById("inputGewicht");
+for(let i=0; i<=200; i++){
+ let opt=document.createElement("option");
+ opt.value=i;
+ opt.text=i+" kg";
+ selectGewicht.appendChild(opt);
 }
 
 function autoGewicht(){
-  if(gewichtSelect.value) nextOrt();
-}
-
-function nextOrt(){
-  e.gewicht = gewichtSelect.value;
-  zeigeSeite("ort");
-}
-
-function setOrt(o){
-  if(o === "Prad") {
-    document.getElementById("mapPopup").classList.remove("hidden");
-  } else {
-    e.ort = o;
-    zeigeSeite("zeit");
-  }
-}
-
-function mapClick(ev) {
-  const rect = ev.target.getBoundingClientRect();
-  const x = (ev.clientX - rect.left) / rect.width * 100;
-  const y = (ev.clientY - rect.top) / rect.height * 100;
-  tempCoords = { x, y };
-  const marker = document.getElementById("mapMarker");
-  marker.style.left = x + "%";
-  marker.style.top = y + "%";
-  marker.classList.remove("hidden");
-}
-
-function confirmMap() {
-  if(!tempCoords) return alert("Bitte Punkt wählen!");
-  e.ort = "Prad (Karte)";
-  e.coords = tempCoords;
-  closeMap();
-  zeigeSeite("zeit");
-}
-
-function closeMap() {
-  document.getElementById("mapPopup").classList.add("hidden");
-}
-
-function zeigeAndereOrt(){
-  document.getElementById("andereOrtBox").classList.remove("hidden");
-}
-
-function setAndereOrt(){
-  let v = document.getElementById("inputOrt").value.trim();
-  if(!v) return alert("Bitte Ort eingeben!");
-  e.ort = v;
-  zeigeSeite("zeit");
-}
-
-function nextDatum(){
-  let v = document.getElementById("inputZeit").value;
-  if(!v) return alert("Bitte Schusszeit wählen!");
-  e.zeit = v;
-  zeigeSeite("datum");
-}
-
-function nextVerwendung(){
-  let v = document.getElementById("inputDatum").value;
-  if(!v) return alert("Bitte Datum wählen!");
-  e.datum = v;
-  zeigeSeite("verwendung");
-}
-
-function finish(verwendung){
-  e.verwendung = verwendung;
-  daten.push(e);
-  speichern();
-  zeigeSeite("revier");
+ let v=selectGewicht.value;
+ if(!v) return;
+ e.gewicht=v;
+ zeigeSeite("ort");
 }
 
 function speichern(){
-  localStorage.setItem("daten", JSON.stringify(daten));
+ localStorage.setItem("daten", JSON.stringify(daten));
 }
 
-function toggleEntnommen(id) {
-  let index = daten.findIndex(item => item.id === id);
-  if(index !== -1) {
-    daten[index].entnommen = !daten[index].entnommen;
-    speichern();
-    renderTabelle();
-  }
+function zeigeSeite(id){
+ document.querySelectorAll(".container > div").forEach(d=>{
+  d.classList.add("hidden");
+  d.style.display="";
+ });
+ let el=document.getElementById(id);
+ el.classList.remove("hidden");
+ el.style.display="block";
+ if(id === 'revier') renderTabelle();
+}
+
+function nextWild(){
+ let v=document.getElementById("inputName").value.trim();
+ if(!v) return alert("Bitte Name eingeben!");
+ e.name=v;
+ zeigeSeite("wild");
+}
+
+function setWild(w){
+ e.wildart=w;
+ e.wild="";
+ if(w==="Fuchs" || w==="Hase"){
+  e.gewicht="";
+  zeigeSeite("ort");
+ } else {
+  zeigeSeite("gewicht");
+ }
+}
+
+function setWildDetail(a,d){
+ e.wildart=a;
+ e.wild=d;
+ zeigeSeite("gewicht");
+}
+
+function setAndere(){
+ let v=document.getElementById("andereInput").value.trim();
+ if(!v) return alert("Bitte Wildart eingeben!");
+ e.wildart=v;
+ e.wild="";
+ zeigeSeite("gewicht");
+}
+
+function nextOrt(){
+ e.gewicht=document.getElementById("inputGewicht").value;
+ zeigeSeite("ort");
+}
+
+function setOrt(o){
+ if(o==="Prad"){
+  document.getElementById("mapPopup").classList.remove("hidden");
+  // Hier würde deine Kartenlogik (Punkt setzen) hinkommen
+ } else {
+  e.ort=o;
+  zeigeSeite("zeit");
+ }
+}
+
+function closeMap() {
+ document.getElementById("mapPopup").classList.add("hidden");
+ e.ort="Prad (Karte)";
+ zeigeSeite("zeit");
+}
+
+function zeigeAndereOrt(){
+ document.getElementById("andereOrtBox").classList.remove("hidden");
+}
+
+function setAndereOrt(){
+ let v=document.getElementById("inputOrt").value.trim();
+ if(!v) return alert("Bitte Ort eingeben!");
+ e.ort=v;
+ zeigeSeite("zeit");
+}
+
+function nextDatum(){
+ let v=document.getElementById("inputZeit").value;
+ if(!v) return alert("Bitte Schusszeit!");
+ e.zeit=v;
+ zeigeSeite("datum");
+}
+
+function autoZeit(){
+ let v=document.getElementById("inputZeit").value;
+ if(!v) return;
+ e.zeit=v;
+ zeigeSeite("datum");
+}
+
+function autoDatum(){
+ let v=document.getElementById("inputDatum").value;
+ if(!v) return;
+ e.datum=v;
+ zeigeSeite("verwendung");
+}
+
+function nextVerwendung() {
+ e.datum=document.getElementById("inputDatum").value;
+ zeigeSeite("verwendung");
+}
+
+function finish(verwendung){
+ e.verwendung = verwendung;
+ e.id = Date.now();
+ daten.push(e);
+ speichern();
+ e = {}; // Reset für den nächsten Eintrag
+ zeigeSeite("revier");
 }
 
 function renderTabelle(){
-  let html = `<tr>
-    <th>Erleger</th>
-    <th>Wildart</th>
-    <th>Detail</th>
-    <th>kg</th>
-    <th>Ort</th>
-    <th>Zeit</th>
-    <th>Datum</th>
-    <th>Verwendung</th>
-    <th>Status</th>
+ let html = "<tr><th>Name</th><th>Wildart</th><th>Detail</th><th>Gewicht</th><th>Ort</th><th>Zeit</th><th>Datum</th><th>Verwendung</th></tr>";
+ daten.forEach(d => {
+  html += `<tr>
+   <td>${d.name}</td>
+   <td>${d.wildart}</td>
+   <td>${d.wild || '-'}</td>
+   <td>${d.gewicht}</td>
+   <td>${d.ort}</td>
+   <td>${d.zeit}</td>
+   <td>${d.datum}</td>
+   <td>${d.verwendung}</td>
   </tr>`;
-  
-  daten.slice().reverse().forEach(d => {
-    html += `<tr>
-      <td>${d.name}</td>
-      <td>${d.wildart}</td>
-      <td>${d.wild}</td>
-      <td>${d.gewicht}</td>
-      <td>${d.ort}</td>
-      <td>${d.zeit}</td>
-      <td>${d.datum}</td>
-      <td>${d.verwendung}</td>
-      <td>
-        <button class="entnommen-btn ${d.entnommen ? 'entnommen-done' : ''}" 
-                onclick="toggleEntnommen(${d.id})">
-          ${d.entnommen ? '✔' : 'Offen'}
-        </button>
-      </td>
-    </tr>`;
-  });
-  document.getElementById("tabelle").innerHTML = html;
+ });
+ document.getElementById("tabelle").innerHTML = html;
 }
 
-// Initialisierung
+// Initialer Aufruf der Tabelle
 renderTabelle();
 </script>
 </body>
