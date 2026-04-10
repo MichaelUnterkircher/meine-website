@@ -107,8 +107,8 @@ input, select {
 
 .marker {
   position:absolute;
-  width:6px;
-  height:6px;
+  width:5px;
+  height:5px;
   border-radius:50%;
   transform:translate(-50%,-50%);
   border:1px solid black;
@@ -157,7 +157,7 @@ input, select {
 <button onclick="zeigeSeite('reh')">Rehwild</button>
 <button onclick="zeigeSeite('hirsch')">Rotwild</button>
 <button onclick="zeigeSeite('gams')">Gamswild</button>
-<button onclick="setWild('Wildschwein')">Wildschwein</button>
+<button onclick="setWild('Fuchs')">Fuchs</button>
 <button onclick="setWild('Hase')">Hase</button>
 <button onclick="zeigeSeite('andere')">Andere</button>
 <button onclick="zeigeSeite('name')">⬅ Zurück</button>
@@ -201,7 +201,7 @@ input, select {
 
 <div id="gewicht" class="hidden">
 <h3>Gewicht (kg)</h3>
-<select id="inputGewicht"></select>
+<select id="inputGewicht" onchange="autoGewicht()"></select>
 <button onclick="nextOrt()">Weiter</button>
 <button onclick="zeigeSeite('wild')">⬅ Zurück</button>
 </div>
@@ -245,11 +245,9 @@ input, select {
 <!-- Karte -->
 <div id="mapPopup" class="popup hidden">
 <h3>Karte Prad</h3>
-
 <div style="position:relative;">
-  <img id="mapImage" src="Revier.png" style="width:100%;cursor:crosshair;">
+  <img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier1.png" style="width:100%;cursor:crosshair;">
 </div>
-
 <button onclick="closeMap()">OK</button>
 </div>
 
@@ -264,6 +262,13 @@ for(let i=0;i<=200;i++){
  opt.value=i;
  opt.text=i+" kg";
  inputGewicht.appendChild(opt);
+}
+
+function autoGewicht(){
+ let v=inputGewicht.value;
+ if(!v) return;
+ e.gewicht=v;
+ zeigeSeite("ort");
 }
 
 function speichern(){
@@ -340,9 +345,9 @@ function nextDatum(){
 }
 
 function autoZeit(){
- let v = inputZeit.value;
+ let v=inputZeit.value;
  if(!v) return;
- e.zeit = v;
+ e.zeit=v;
  zeigeSeite("datum");
 }
 
@@ -354,9 +359,9 @@ function nextVerwendung(){
 }
 
 function autoDatum(){
- let v = inputDatum.value;
+ let v=inputDatum.value;
  if(!v) return;
- e.datum = v;
+ e.datum=v;
  zeigeSeite("verwendung");
 }
 
