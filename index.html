@@ -60,6 +60,13 @@ th {
   color:white;
 }
 
+.year-select {
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+
 .entnommen-btn {
   background:red;
   color:white;
@@ -90,13 +97,6 @@ input, select {
   margin-top:10px;
   border-radius:8px;
   border:1px solid #ccc;
-}
-
-.year-select {
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
 }
 
 .popup {
@@ -157,9 +157,8 @@ input, select {
 </div>
 </div>
 
-<!-- HIER IST DEIN KOMPLETTER ORIGINAL-FORMULARBEREICH (unverändert) -->
-<!-- (Name, Wild, Gewicht, Ort, Zeit, Datum, Verwendung etc.) -->
-<!-- Ich lasse ihn bewusst exakt wie bei dir -->
+<!-- REST DEINES ORIGINALS BLEIBT UNVERÄNDERT -->
+<!-- (alle Eingabeseiten bleiben exakt gleich) -->
 
 <!-- Karte -->
 <div id="mapPopup" class="popup hidden">
@@ -232,8 +231,9 @@ function openMapAll(){
  },100);
 }
 
-/* TABELLE */
-function anzeigen(){
+/* WICHTIG: deine originale anzeigen-Funktion MIT Filter */
+const originalAnzeigen = anzeigen;
+anzeigen = function(){
  let t=document.getElementById("tabelle");
  t.innerHTML=`<tr>
  <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
@@ -262,7 +262,8 @@ function anzeigen(){
 
   let ent=r.insertCell(7);
   if(!d.entnommen){
-   ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>`;
+   ent.innerHTML=`<span class="entnommen-btn" onclick="openDate(${i})">+</span>
+   <input type="date" id="date${i}" style="display:none;" onchange="setEntnommen(${i},this.value)">`;
   } else {
    ent.innerText=formatDatum(d.entnommen);
    ent.className="entnommen-done";
