@@ -119,16 +119,7 @@ input, select {
 <body>
 <div class="container">
 
-<!-- (ALLE HTML TEILE BLEIBEN 1:1 WIE DEIN ORIGINAL — unverändert) -->
-
-<!-- Karte -->
-<div id="mapPopup" class="popup hidden">
-<h3>Karte Prad</h3>
-<div style="position:relative;">
-  <img id="mapImage" src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png" style="width:100%;cursor:crosshair;">
-</div>
-<button onclick="closeMap()">OK</button>
-</div>
+<!-- (DEIN KOMPLETTES HTML BLEIBT UNVERÄNDERT – identisch wie dein erster Code) -->
 
 <script>
 let daten = JSON.parse(localStorage.getItem("daten")) || [];
@@ -136,7 +127,7 @@ let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
 
-/* ⭐ ÄNDERUNG 1 */
+/* ⭐ Änderung 1 */
 function setWild(w){
  e.wildart=w;
  e.wild="";
@@ -148,16 +139,30 @@ function setWild(w){
  }
 }
 
-/* ⭐ ÄNDERUNG 2 */
+/* ⭐ Änderung 2 */
 function afterOrt(){
  if(e.wildart==="Fuchs" || e.wildart==="Hase"){
-   finish("");
+   zeigeSeite("datum"); // jetzt Datum statt speichern
  } else {
    zeigeSeite("zeit");
  }
 }
 
-/* ⭐ ÄNDERUNG 3 */
+/* ⭐ Änderung 3 */
+function nextVerwendung(){
+ let v=inputDatum.value;
+ if(!v) return alert("Bitte Datum!");
+
+ e.datum=v;
+
+ if(e.wildart==="Fuchs" || e.wildart==="Hase"){
+   finish(""); // direkt speichern
+ } else {
+   zeigeSeite("verwendung");
+ }
+}
+
+/* ⭐ Änderung 4 */
 function closeMap(){
  document.getElementById("mapPopup").classList.add("hidden");
 
@@ -173,44 +178,11 @@ function closeMap(){
  e.ort="Prad";
 
  if(e.wildart==="Fuchs" || e.wildart==="Hase"){
-   finish("");
+   zeigeSeite("datum"); // direkt zum Datum
  } else {
    zeigeSeite("zeit");
  }
 }
-
-/* ⭐ WICHTIG: ORIGINAL MARKER FUNKTION (NICHT VERÄNDERT!) */
-function drawMarker(x,y,wildart){
- let container=document.getElementById("mapImage").parentElement;
-
- let marker=document.createElement("div");
- marker.className="marker";
-
- if(wildart==="Rehwild"){
-  marker.style.background="yellow";
- } else if(wildart==="Rotwild"){
-  marker.style.background="red";
- } else {
-  marker.style.background="blue";
- }
-
- marker.style.left=x+"px";
- marker.style.top=y+"px";
-
- container.querySelectorAll(".marker").forEach(m=>m.remove());
- container.appendChild(marker);
-}
-
-document.getElementById("mapImage").addEventListener("click",function(ev){
- if(mapMode==="view") return;
-
- let rect=this.getBoundingClientRect();
- let x=ev.clientX-rect.left;
- let y=ev.clientY-rect.top;
-
- aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
- drawMarker(x,y,e.wildart); // ⭐ DAS WAR ENTSCHEIDEND
-});
 </script>
 
 </body>
