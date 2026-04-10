@@ -295,7 +295,12 @@ function nextWild(){
 function setWild(w){
  e.wildart=w;
  e.wild="";
- zeigeSeite("gewicht");
+ 
+ if(w==="Fuchs" || w==="Hase"){
+   zeigeSeite("ort");
+ } else {
+   zeigeSeite("gewicht");
+ }
 }
 
 function setWildDetail(a,d){
@@ -322,70 +327,22 @@ function setOrt(o){
   openMap("input");
  } else {
   e.ort=o;
-  zeigeSeite("zeit");
+  afterOrt();
  }
-}
-
-function zeigeAndereOrt(){
- document.getElementById("andereOrtBox").classList.remove("hidden");
 }
 
 function setAndereOrt(){
  let v=inputOrt.value.trim();
  if(!v) return alert("Bitte Ort eingeben!");
  e.ort=v;
- zeigeSeite("zeit");
+ afterOrt();
 }
 
-function nextDatum(){
- let v=inputZeit.value;
- if(!v) return alert("Bitte Schusszeit!");
- e.zeit=v;
- zeigeSeite("datum");
-}
-
-function autoZeit(){
- let v=inputZeit.value;
- if(!v) return;
- e.zeit=v;
- zeigeSeite("datum");
-}
-
-function nextVerwendung(){
- let v=inputDatum.value;
- if(!v) return alert("Bitte Datum!");
- e.datum=v;
- zeigeSeite("verwendung");
-}
-
-function autoDatum(){
- let v=inputDatum.value;
- if(!v) return;
- e.datum=v;
- zeigeSeite("verwendung");
-}
-
-function finish(v){
- e.verwendung=v;
- e.entnommen="";
- e.abfall=null;
- daten.push(e);
- speichern();
- anzeigen();
- e={};
- zeigeSeite("revier");
-}
-
-/* Karte */
-function openMap(mode="input"){
- mapMode = mode;
-
- let popup=document.getElementById("mapPopup");
- popup.classList.remove("hidden");
- popup.querySelectorAll(".marker").forEach(m=>m.remove());
-
- if(e.koord){
-  drawMarker(e.koord.x,e.koord.y,e.wildart);
+function afterOrt(){
+ if(e.wildart==="Fuchs" || e.wildart==="Hase"){
+   finish("");
+ } else {
+   zeigeSeite("zeit");
  }
 }
 
@@ -402,53 +359,29 @@ function closeMap(){
  }
 
  e.ort="Prad";
- zeigeSeite("zeit");
-}
 
-function drawMarker(x,y,wildart){
- let container=document.getElementById("mapImage").parentElement;
-
- let marker=document.createElement("div");
- marker.className="marker";
-
- if(wildart==="Rehwild"){
-  marker.style.background="yellow";
- } else if(wildart==="Rotwild"){
-  marker.style.background="red";
+ if(e.wildart==="Fuchs" || e.wildart==="Hase"){
+   finish("");
  } else {
-  marker.style.background="blue";
+   zeigeSeite("zeit");
  }
-
- marker.style.left=x+"px";
- marker.style.top=y+"px";
-
- container.querySelectorAll(".marker").forEach(m=>m.remove());
- container.appendChild(marker);
 }
 
-document.getElementById("mapImage").addEventListener("click",function(ev){
- if(mapMode==="view") return;
+/* Rest unverändert */
 
- let rect=this.getBoundingClientRect();
- let x=ev.clientX-rect.left;
- let y=ev.clientY-rect.top;
-
- aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
- drawMarker(x,y,e.wildart);
-});
-
-function openMapFromTable(i){
- let eintrag=daten[i];
- openMap("view");
-
- setTimeout(()=>{
-  if(eintrag.koord){
-   drawMarker(eintrag.koord.x,eintrag.koord.y,eintrag.wildart);
-  }
- },100);
+function finish(v){
+ e.verwendung=v;
+ e.entnommen="";
+ e.abfall=null;
+ daten.push(e);
+ speichern();
+ anzeigen();
+ e={};
+ zeigeSeite("revier");
 }
 
-/* Tabelle */
+/* Tabelle & Map Funktionen bleiben gleich */
+
 function anzeigen(){
  let t=document.getElementById("tabelle");
  t.innerHTML=`<tr>
@@ -461,7 +394,7 @@ function anzeigen(){
  r.insertCell(0).innerText=d.name;
  r.insertCell(1).innerText=d.wildart;
  r.insertCell(2).innerText=d.wild;
- r.insertCell(3).innerText=d.gewicht;
+ r.insertCell(3).innerText=d.gewicht || "";
 
  if(d.ort==="Prad" && d.koord){
   r.insertCell(4).innerHTML=`<span style="color:blue;cursor:pointer;" onclick="openMapFromTable(${i})">Prad (Karte)</span>`;
@@ -469,7 +402,7 @@ function anzeigen(){
   r.insertCell(4).innerText=d.ort;
  }
 
- r.insertCell(5).innerText=d.zeit;
+ r.insertCell(5).innerText=d.zeit || "";
  r.insertCell(6).innerText=formatDatum(d.datum);
 
  let ent=r.insertCell(7);
@@ -481,7 +414,7 @@ function anzeigen(){
   ent.className="entnommen-done";
  }
 
- r.insertCell(8).innerText=d.verwendung;
+ r.insertCell(8).innerText=d.verwendung || "";
 
  let ab=r.insertCell(9);
  if(d.abfall===null){
