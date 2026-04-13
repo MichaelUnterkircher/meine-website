@@ -543,6 +543,21 @@ let selectedYear = new Date().getFullYear();
 let isAdmin = false;
 
 /* ---------- Init ---------- */
+function fillExportYears() {
+  const sel = document.getElementById("exportYear");
+  if (!sel) return;
+
+  sel.innerHTML = "";
+
+  getYears().forEach(y => {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    sel.appendChild(opt);
+  });
+
+  sel.value = selectedYear;
+}
 function init() {
   const sel = document.getElementById("inputGewicht");
   sel.innerHTML = "";
@@ -556,7 +571,7 @@ function init() {
   anzeigen();
 }
 
-function applyConfig() {
+function applyConfig() fillExportYears();{
   document.getElementById("cfgRevier").value = config.revier;
   document.getElementById("cfgCode").value = config.code;
   document.getElementById("cfgMapUrl").value = config.mapUrl;
@@ -1051,6 +1066,7 @@ document.getElementById("inputDatum").addEventListener("change", () => setTimeou
 
 /* ---------- Start ---------- */
 init();
+fillExportYears();
 </script>
 </body>
 </html>
