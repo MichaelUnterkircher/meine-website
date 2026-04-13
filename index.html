@@ -539,10 +539,9 @@ let selectedYear = new Date().getFullYear();
 let isAdmin = false;
 
 /* ---------- Init ---------- */
-function init() {
 function fillExportYears() {
   const sel = document.getElementById("exportYear");
-  if (!sel) return; // wichtig falls Admin noch nicht offen ist
+  if (!sel) return;
 
   sel.innerHTML = "";
 
@@ -553,9 +552,10 @@ function fillExportYears() {
     sel.appendChild(opt);
   });
 
-  // aktuelles Jahr vorauswählen
   sel.value = selectedYear;
 }
+
+function init() {
   const sel = document.getElementById("inputGewicht");
   sel.innerHTML = "";
   for (let i = 0; i <= 200; i++) {
