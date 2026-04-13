@@ -609,7 +609,7 @@ function realIdx(fi) { return daten.indexOf(getFiltered()[fi]); }
 function updateStats() {
   const fd = getFiltered();
   const counts = {};
-  fd.forEach(d => { let w = d.wildart || "Andere"; if (w !== "Rehwild" && w !== "Rotwild") w = "Andere"; counts[w] = (counts[w]||0) + 1; });
+  fd.forEach(d => { const w = d.wildart || "Andere"; counts[w] = (counts[w]||0) + 1; });
   let h = `<div class="stat-box"><div class="num">${fd.length}</div><div class="lbl">Gesamt</div></div>`;
   Object.keys(counts).sort().forEach(k => {
     h += `<div class="stat-box"><div class="num">${counts[k]}</div><div class="lbl">${esc(k)}</div></div>`;
@@ -742,7 +742,7 @@ function closeMap() {
 function drawMarker(x,y,w) {
   const c=document.getElementById("mapContainer"), m=document.createElement("div");
   m.className="marker";
-  const cl={"Rehwild":"yellow","Rotwild":"red"};
+  const cl={"Rehwild":"yellow","Rotwild":"red","Gamswild":"#888"};
   m.style.background=cl[w]||"blue";
   m.style.left=(x*100)+"%"; m.style.top=(y*100)+"%";
   c.appendChild(m);
