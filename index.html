@@ -742,7 +742,7 @@ function closeMap() {
 function drawMarker(x,y,w) {
   const c=document.getElementById("mapContainer"), m=document.createElement("div");
   m.className="marker";
-  const cl={"Rehwild":"yellow","Rotwild":"red","Gamswild":"#888"};
+  const cl={"Rehwild":"yellow","Rotwild":"red"};
   m.style.background=cl[w]||"blue";
   m.style.left=(x*100)+"%"; m.style.top=(y*100)+"%";
   c.appendChild(m);
