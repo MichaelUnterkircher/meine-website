@@ -541,6 +541,22 @@ let isAdmin = false;
 
 /* ---------- Init ---------- */
 function init() {
+function fillExportYears() {
+  const sel = document.getElementById("exportYear");
+  if (!sel) return; // wichtig falls Admin noch nicht offen ist
+
+  sel.innerHTML = "";
+
+  getYears().forEach(y => {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    sel.appendChild(opt);
+  });
+
+  // aktuelles Jahr vorauswählen
+  sel.value = selectedYear;
+}
   const sel = document.getElementById("inputGewicht");
   sel.innerHTML = "";
   for (let i = 0; i <= 200; i++) {
@@ -1048,6 +1064,7 @@ document.getElementById("inputDatum").addEventListener("change", () => setTimeou
 
 /* ---------- Start ---------- */
 init();
+fillExportYears();
 </script>
 </body>
 </html>
