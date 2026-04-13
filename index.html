@@ -257,6 +257,7 @@ let daten = JSON.parse(localStorage.getItem("daten")) || [];
 let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
+let aktuellerMarker = null;
 
 for(let i=0;i<=200;i++){
  let opt=document.createElement("option");
@@ -398,19 +399,27 @@ function openMap(mode="input"){
 
  let popup=document.getElementById("mapPopup");
  popup.classList.remove("hidden");
+
+ let title = popup.querySelector("h3");
+ title.innerText = (mode==="input") ? "Punkt setzen" : "Karte Prad";
+
  popup.querySelectorAll(".marker").forEach(m=>m.remove());
+ aktuellerMarker = null;
 
  if(e.koord){
-  drawMarker(e.koord.x,e.koord.y,e.wildart);
+  aktuellerMarker = drawMarker(e.koord.x,e.koord.y,e.wildart);
  }
 }
 
-/* NEU: Alle Punkte anzeigen */
 function openMapAll(){
  mapMode = "view";
 
  let popup=document.getElementById("mapPopup");
  popup.classList.remove("hidden");
+
+ let title = popup.querySelector("h3");
+ title.innerText = "Karte Prad";
+
  popup.querySelectorAll(".marker").forEach(m=>m.remove());
 
  daten.forEach(d=>{
@@ -454,6 +463,7 @@ function drawMarker(x,y,wildart){
  marker.style.top=y+"px";
 
  container.appendChild(marker);
+ return marker;
 }
 
 document.getElementById("mapImage").addEventListener("click",function(ev){
@@ -464,7 +474,12 @@ document.getElementById("mapImage").addEventListener("click",function(ev){
  let y=ev.clientY-rect.top;
 
  aktuellerPunkt={x:Math.round(x),y:Math.round(y)};
- drawMarker(x,y,e.wildart);
+
+ if(aktuellerMarker){
+  aktuellerMarker.remove();
+ }
+
+ aktuellerMarker = drawMarker(x,y,e.wildart);
 });
 
 function openMapFromTable(i){
