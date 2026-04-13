@@ -1036,33 +1036,7 @@ function clearAllData() {
 
 /* ---------- Export / Import ---------- */
 function exportJSON() {
-  const year = document.getElementById("exportYear").value;
-
-  const data = daten.filter(d =>
-    d.datum && new Date(d.datum).getFullYear() == year
-  );
-
-  if (!data.length) {
-    alert("Keine Daten für dieses Jahr!");
-    return;
-  }
-
-  let csv = "Erleger;Wildart;Detail;Gewicht;Ort;Zeit;Datum;Verwendung\n";
-
-  data.forEach(d => {
-    csv += [
-      d.name || "",
-      d.wildart || "",
-      d.wild || "",
-      d.gewicht || "",
-      d.ort || "",
-      d.zeit || "",
-      formatDatum(d.datum),
-      d.verwendung || ""
-    ].join(";") + "\n";
-  });
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
