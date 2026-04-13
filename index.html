@@ -483,12 +483,9 @@ tr:hover { background: var(--gruen-l); }
   </div>
 
   <div class="admin-section">
-  <h4>Daten exportieren</h4>
-  <div class="admin-row">
-  <label>Jahr wählen:</label>
-  <select id="exportYear"></select>
-  </div>
-  <button class="sm" onclick="exportExcel()">📊 Export als Excel</button>
+    <h4>Daten verwalten</h4>
+    <button class="sm danger" onclick="clearYearData()">Daten des gewählten Jahres löschen</button>
+    <button class="sm danger" onclick="clearAllData()">Alle Daten löschen</button>
   </div>
 
   <div style="margin-top:10px;">
@@ -543,21 +540,6 @@ let selectedYear = new Date().getFullYear();
 let isAdmin = false;
 
 /* ---------- Init ---------- */
-function fillExportYears() {
-  const sel = document.getElementById("exportYear");
-  if (!sel) return;
-
-  sel.innerHTML = "";
-
-  getYears().forEach(y => {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    sel.appendChild(opt);
-  });
-
-  sel.value = selectedYear;
-}
 function init() {
   const sel = document.getElementById("inputGewicht");
   sel.innerHTML = "";
@@ -571,7 +553,7 @@ function init() {
   anzeigen();
 }
 
-function applyConfig() fillExportYears();{
+function applyConfig() {
   document.getElementById("cfgRevier").value = config.revier;
   document.getElementById("cfgCode").value = config.code;
   document.getElementById("cfgMapUrl").value = config.mapUrl;
@@ -1066,7 +1048,6 @@ document.getElementById("inputDatum").addEventListener("change", () => setTimeou
 
 /* ---------- Start ---------- */
 init();
-fillExportYears();
 </script>
 </body>
 </html>
