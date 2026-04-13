@@ -105,7 +105,7 @@ input, select {
   width:320px;
 }
 
-/* 🔥 Marker größer gemacht */
+/* größerer Marker */
 .marker {
   position:absolute;
   width:12px;
@@ -115,7 +115,6 @@ input, select {
   border:2px solid black;
 }
 
-/* Hinweis */
 .map-hint{
   font-size:14px;
   margin-bottom:5px;
@@ -155,7 +154,102 @@ input, select {
 </div>
 </div>
 
-<!-- ... ALLE DEINE ORIGINAL SEITEN BLEIBEN UNVERÄNDERT ... -->
+<div id="name" class="hidden">
+<h3>Name Erleger</h3>
+<input id="inputName">
+<button onclick="nextWild()">Weiter</button>
+<button onclick="zeigeSeite('revier')">⬅ Zurück</button>
+</div>
+
+<div id="wild" class="hidden">
+<h3>Wildart</h3>
+<button onclick="zeigeSeite('reh')">Rehwild</button>
+<button onclick="zeigeSeite('hirsch')">Rotwild</button>
+<button onclick="zeigeSeite('gams')">Gamswild</button>
+<button onclick="setWild('Fuchs')">Fuchs</button>
+<button onclick="setWild('Hase')">Hase</button>
+<button onclick="zeigeSeite('andere')">Andere</button>
+<button onclick="zeigeSeite('name')">⬅ Zurück</button>
+</div>
+
+<div id="reh" class="hidden">
+<h3>Rehwild</h3>
+<button onclick="setWildDetail('Rehwild','T-Bock')">T-Bock</button>
+<button onclick="setWildDetail('Rehwild','J-Bock')">J-Bock</button>
+<button onclick="setWildDetail('Rehwild','Geiß')">Geiß</button>
+<button onclick="setWildDetail('Rehwild','Schmalgeiß')">Schmalgeiß</button>
+<button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
+<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="hirsch" class="hidden">
+<h3>Rotwild</h3>
+<button onclick="setWildDetail('Rotwild','T-Hirsch')">T-Hirsch</button>
+<button onclick="setWildDetail('Rotwild','J-Hirsch')">J-Hirsch</button>
+<button onclick="setWildDetail('Rotwild','Tier')">Tier</button>
+<button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
+<button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
+<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="gams" class="hidden">
+<h3>Gamswild</h3>
+<button onclick="setWildDetail('Gamswild','Bock')">Bock</button>
+<button onclick="setWildDetail('Gamswild','Geiß')">Geiß</button>
+<button onclick="setWildDetail('Gamswild','Jahrling')">Jahrling</button>
+<button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
+<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="andere" class="hidden">
+<h3>Andere Wildart</h3>
+<input id="andereInput">
+<button onclick="setAndere()">Weiter</button>
+<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="gewicht" class="hidden">
+<h3>Gewicht (kg)</h3>
+<select id="inputGewicht" onchange="autoGewicht()"></select>
+<button onclick="nextOrt()">Weiter</button>
+<button onclick="zeigeSeite('wild')">⬅ Zurück</button>
+</div>
+
+<div id="ort" class="hidden">
+<h3>Örtlichkeit</h3>
+<button onclick="setOrt('Prad')">Prad</button>
+<button onclick="zeigeAndereOrt()">Andere</button>
+
+<div id="andereOrtBox" class="hidden">
+<input id="inputOrt" placeholder="Ort eingeben">
+<button onclick="setAndereOrt()">Weiter</button>
+</div>
+
+<button onclick="zeigeSeite('gewicht')">⬅ Zurück</button>
+</div>
+
+<div id="zeit" class="hidden">
+<h3>Schusszeit</h3>
+<input type="time" id="inputZeit" onchange="autoZeit()">
+<button onclick="nextDatum()">Weiter</button>
+<button onclick="zeigeSeite('ort')">⬅ Zurück</button>
+</div>
+
+<div id="datum" class="hidden">
+<h3>Eingelagert Datum</h3>
+<input type="date" id="inputDatum" onchange="autoDatum()">
+<button onclick="nextVerwendung()">Weiter</button>
+<button onclick="zeigeSeite('zeit')">⬅ Zurück</button>
+</div>
+
+<div id="verwendung" class="hidden">
+<h3>Verwendung</h3>
+<button onclick="finish('Eigengebrauch')">Eigengebrauch</button>
+<button onclick="finish('Verkauf')">Verkauf</button>
+<button onclick="zeigeSeite('datum')">⬅ Zurück</button>
+</div>
+
+</div>
 
 <!-- Karte -->
 <div id="mapPopup" class="popup hidden">
@@ -173,7 +267,28 @@ let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
 
-/* Karte öffnen */
+for(let i=0;i<=200;i++){
+ let opt=document.createElement("option");
+ opt.value=i;
+ opt.text=i+" kg";
+ inputGewicht.appendChild(opt);
+}
+
+function speichern(){
+ localStorage.setItem("daten", JSON.stringify(daten));
+}
+
+function zeigeSeite(id){
+ document.querySelectorAll("div[id]").forEach(d=>{
+  d.classList.add("hidden");
+  d.style.display="";
+ });
+ let el=document.getElementById(id);
+ el.classList.remove("hidden");
+ el.style.display="block";
+}
+
+/* Karte */
 function openMap(mode="input"){
  mapMode = mode;
 
@@ -195,9 +310,8 @@ function openMap(mode="input"){
  }
 }
 
-/* Alle Punkte */
 function openMapAll(){
- mapMode="view";
+ mapMode = "view";
 
  let popup=document.getElementById("mapPopup");
  popup.classList.remove("hidden");
@@ -213,7 +327,22 @@ function openMapAll(){
  });
 }
 
-/* Marker zeichnen */
+function closeMap(){
+ document.getElementById("mapPopup").classList.add("hidden");
+
+ if(mapMode === "view"){
+  zeigeSeite("revier");
+  return;
+ }
+
+ if(aktuellerPunkt){
+  e.koord=aktuellerPunkt;
+ }
+
+ e.ort="Prad";
+ zeigeSeite("zeit");
+}
+
 function drawMarker(x,y,wildart){
  let container=document.getElementById("mapImage").parentElement;
 
@@ -234,7 +363,6 @@ function drawMarker(x,y,wildart){
  container.appendChild(marker);
 }
 
-/* Klick -> nur 1 Marker */
 document.getElementById("mapImage").addEventListener("click",function(ev){
  if(mapMode==="view") return;
 
@@ -266,13 +394,43 @@ function handleAbfall(i){
 
 function setAbfall(i,val){
  daten[i].abfall=val;
- localStorage.setItem("daten", JSON.stringify(daten));
+ speichern();
  anzeigen();
 
  document.querySelectorAll(".popup").forEach(p=>{
   if(p.id!=="mapPopup") p.remove();
  });
 }
+
+function anzeigen(){
+ let t=document.getElementById("tabelle");
+ t.innerHTML=`<tr>
+ <th>Name</th><th>Wildart</th><th>Wild</th><th>kg</th><th>Ort</th>
+ <th>Schusszeit</th><th>Eingelagert</th><th>Entnommen</th>
+ <th>Verwendung</th><th>Abfall</th></tr>`;
+
+ daten.forEach((d,i)=>{
+ let r=t.insertRow();
+ r.insertCell(0).innerText=d.name;
+ r.insertCell(1).innerText=d.wildart;
+ r.insertCell(2).innerText=d.wild;
+ r.insertCell(3).innerText=d.gewicht;
+
+ if(d.ort==="Prad" && d.koord){
+  r.insertCell(4).innerHTML=`<span style="color:blue;cursor:pointer;" onclick="openMapFromTable(${i})">Prad (Karte)</span>`;
+ } else {
+  r.insertCell(4).innerText=d.ort;
+ }
+
+ r.insertCell(5).innerText=d.zeit;
+ r.insertCell(6).innerText=d.datum;
+ r.insertCell(7).innerText=d.entnommen||"";
+ r.insertCell(8).innerText=d.verwendung;
+ r.insertCell(9).innerText=d.abfall||"";
+ });
+}
+
+anzeigen();
 </script>
 
 </body>
