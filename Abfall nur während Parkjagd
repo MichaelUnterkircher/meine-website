@@ -563,9 +563,11 @@ function setEntnommen(i,val){
 
 function handleAbfall(i){
  let box=document.createElement("div");
- box.className="popup";
+ box.className="popup abfall-popup";
  box.innerHTML=`ACHTUNG!<br><br>
- Abfall nur während Parkjagd<br><br>
+ box.innerHTML=`ACHTUNG: Die Abfallentsorgung durch das Revier erfolgt nur während der Parkjagd.<br><br>
+Hierfür wird eine Gebühr von 5 € erhoben.<br><br>
+Sollten zu einem späteren Zeitpunkt erneut Abfälle anfallen (z. B. beim Zerwirken), ist die Gebühr nochmals zu entrichten.<br><br>
  <button onclick="setAbfall(${i},'bezahlt')">Ja</button>
  <button onclick="setAbfall(${i},'nein')">Nein</button>`;
  document.body.appendChild(box);
