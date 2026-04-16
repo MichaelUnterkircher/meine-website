@@ -5,6 +5,19 @@
 <title>Abschussliste Jagdrevier Prad</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2e7d32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jagdrevier Prad">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="logo.jpg">
+
+<!-- Leaflet (Open-Source-Karten-Bibliothek, nutzt OpenStreetMap-Tiles) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <style>
 :root {
   --gruen: #2e7d32;
@@ -103,6 +116,93 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(46,125,50,0.2);
 }
 
+/* Wildkammer-Übersicht auf der Startseite */
+.wildkammer-box {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-left: 4px solid var(--gruen);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.wildkammer-box h4 {
+  margin: 0 0 6px;
+  color: var(--gruen-d);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.wildkammer-box .wk-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: #333;
+}
+.wildkammer-box .wk-count {
+  font-weight: bold;
+  color: var(--gruen-d);
+}
+.wildkammer-box .wk-empty {
+  color: var(--grau);
+  font-style: italic;
+}
+
+/* Admin-Button oben rechts (immer sichtbar) */
+.admin-fab {
+  position: fixed;
+  top: 20px;
+  /* Rechter Abstand: auf breiten Screens am Container-Rand (max-width
+     900px, also 450px von der Mitte), auf schmalen Screens 12px vom
+     Viewport-Rand. Die max()-Funktion nimmt den größeren Wert. */
+  right: max(12px, calc(50vw - 450px + 24px));
+  z-index: 900;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  color: #2e7d32;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  transition: transform 0.1s, background 0.15s;
+}
+.admin-fab:hover { transform: scale(1.05); background: #fff; }
+.admin-fab.admin-active { background: #2e7d32; color: #fff; }
+
+/* ==================== DRUCKANSICHT ==================== */
+#druckview { display: none; }
+#druckview table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 12px; }
+#druckview th, #druckview td {
+  border: 1px solid #333; padding: 4px 6px; text-align: left;
+  vertical-align: top;
+}
+#druckview th { background: #e0e0e0; }
+#druckview .print-header { text-align: center; margin-bottom: 12px; }
+#druckview .print-header h1 { font-size: 18pt; margin: 0 0 4px; }
+#druckview .print-header h2 { font-size: 13pt; margin: 0; font-weight: normal; color: #555; }
+#druckview .print-footer {
+  display: flex; justify-content: space-between; margin-top: 40px;
+  font-size: 10pt;
+}
+#druckview .sig-block { text-align: center; min-width: 30%; }
+#druckview .sig-line { border-top: 1px solid #000; padding-top: 2px; margin-bottom: 2px; }
+
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+  body { background: #fff !important; padding: 0; }
+  body * { visibility: hidden !important; }
+  #druckview, #druckview * { visibility: visible !important; }
+  #druckview {
+    display: block !important;
+    position: absolute; left: 0; top: 0; width: 100%;
+    background: #fff !important; color: #000 !important; padding: 0;
+  }
+  .admin-fab, .popup-overlay, .popup { display: none !important; }
+}
+
 .year-tabs {
   display: flex;
   gap: 6px;
@@ -172,10 +272,64 @@ tr:hover { background: var(--gruen-l); }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
   gap: 4px;
+  cursor: pointer;
+  user-select: none;
 }
 .card-head strong { font-size: 15px; color: var(--gruen-d); }
+
+/* Kompakte Kopfzeile */
+.card-compact-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 13px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.card-compact-line strong {
+  font-size: 14px;
+  flex-shrink: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-compact-wild {
+  color: var(--grau);
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-compact-date {
+  font-size: 11px;
+  color: var(--grau);
+  flex-shrink: 0;
+}
+.card-expand-chevron {
+  font-size: 10px;
+  color: var(--grau);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.card.expanded .card-expand-chevron { transform: rotate(180deg); }
+
+/* Body ist standardmäßig offen; im compact-Modus eingeklappt,
+   außer wenn die Karte manuell expanded ist */
+.card-body { margin-top: 8px; }
+.card.card-compact .card-body { display: none; }
+.card.card-compact.expanded .card-body { display: block; }
+.card.card-compact { padding: 8px 10px; margin-bottom: 5px; }
+.card.card-compact .card-head { margin-bottom: 0; }
+
+.card-head-admin {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 6px;
+}
 .card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -238,9 +392,194 @@ tr:hover { background: var(--gruen-l); }
 }
 .marker-legend { font-size: 12px; margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
 .marker-legend span { display: inline-flex; align-items: center; gap: 4px; }
-.marker-legend i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.5); display: inline-block; }
+.marker-legend i {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #000;
+  display: inline-block;
+}
+
+/* Leaflet-Overrides: Karte nicht höher als Popup, Marker als farbige Kreise */
+#mapContainer .wild-marker {
+  background: #1E88E5;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #000, 0 2px 6px rgba(0,0,0,0.4);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+}
+#mapContainer .wild-marker.reh  { background: #FFD600; }
+#mapContainer .wild-marker.rot  { background: #E53935; }
+#mapContainer .wild-marker.gams { background: #424242; }
+#mapContainer .wild-marker.fox  { background: #FF6D00; }
+/* Park-Rotwild: je Klasse eine eigene Farbe */
+#mapContainer .wild-marker.park-thirsch    { background: #8E0000; }  /* dunkelrot */
+#mapContainer .wild-marker.park-jhirsch    { background: #FF6D00; }  /* orange */
+#mapContainer .wild-marker.park-tier       { background: #E91E63; }  /* pink */
+#mapContainer .wild-marker.park-schmaltier { background: #AB47BC; }  /* violett */
+#mapContainer .wild-marker.park-kalb       { background: #FFEB3B; }  /* gelb */
+#mapContainer .wild-marker.fox  { background: #FF6D00; }
+#mapContainer .leaflet-div-icon {
+  background: transparent;
+  border: none;
+}
 
 .hint { font-size: 12px; color: #555; margin: 6px 0; }
+
+/* Bottom-Navigation (mobil-first, auch auf Desktop sichtbar) */
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 8px 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 900;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  gap: 2px;
+}
+.bottom-nav button {
+  flex: 1 1 auto;
+  background: transparent;
+  color: var(--grau);
+  margin: 0;
+  padding: 6px 2px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  border: none;
+  border-radius: 8px;
+  min-width: 0;
+}
+.bottom-nav button:hover { background: #e8f5e9; }
+.bottom-nav button.active { color: var(--gruen-d); background: #e8f5e9; }
+.bottom-nav .bn-icon { font-size: 22px; line-height: 1; }
+.bottom-nav .bn-lbl { white-space: nowrap; }
+/* Floating Action Button (Neuer Eintrag).
+   Schwebt rechts oberhalb der Bottom-Nav als eigenständiger Kreis.
+   Die right-Formel mit max() sorgt dafür, dass der Button auf breiten
+   Bildschirmen am Container-Rand sitzt (max-width 900px), nicht am
+   Viewport-Rand im grünen Hintergrund. */
+.floating-fab {
+  position: fixed !important;
+  right: max(18px, calc(50vw - 450px + 24px)) !important;
+  /* Höhe der Bottom-Nav (~60px) + Abstand (~30px) + safe-area */
+  bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 62px !important;
+  height: 62px !important;
+  border-radius: 50% !important;
+  background: var(--gruen) !important;
+  color: #fff !important;
+  font-size: 30px !important;
+  line-height: 62px !important;
+  text-align: center;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(46,125,50,0.45) !important;
+  z-index: 920 !important;
+  cursor: pointer;
+  flex: none !important;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+.floating-fab:hover {
+  background: var(--gruen-d) !important;
+  box-shadow: 0 8px 24px rgba(46,125,50,0.55) !important;
+}
+.floating-fab:active { transform: scale(0.95) !important; }
+
+/* Platz für Bottom-Nav schaffen, damit der letzte Inhalt nicht darunter verschwindet */
+body.has-bottom-nav .container { padding-bottom: 90px; }
+
+/* Toast-Benachrichtigungen */
+.toast-box {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%);
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  max-width: 92%;
+}
+.toast {
+  background: #2e7d32;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  font-size: 14px;
+  animation: toastIn 0.25s ease-out;
+  pointer-events: auto;
+}
+.toast.err  { background: #c62828; }
+.toast.warn { background: #f57c00; }
+.toast.info { background: #1565c0; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Admin-Panel */
+.admin-page { padding-bottom: 90px; }  /* Platz für sticky bar */
+.admin-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.admin-header h3 { margin: 0; }
+
+.admin-tabs {
+  display: flex; gap: 4px; overflow-x: auto;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+.admin-tab {
+  flex: 0 0 auto;
+  background: #eeeeee !important; color: #555 !important;
+  padding: 10px 14px;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  margin: 0;
+  white-space: nowrap;
+}
+.admin-tab.active {
+  background: var(--gruen) !important; color: #fff !important;
+}
+.admin-tab-content { display: none; }
+.admin-tab-content.active { display: block; }
+
+.admin-bottom-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex; gap: 8px;
+  background: rgba(255,255,255,0.97);
+  padding: 10px 12px;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
+  z-index: 900;
+  backdrop-filter: blur(6px);
+}
+.admin-bottom-bar button {
+  flex: 1;
+  margin: 0;
+  padding: 10px 8px;
+  font-size: 14px;
+}
 
 .admin-section { margin: 12px 0; padding: 12px; background: #f5f5f5; border-radius: var(--radius); }
 .admin-section h4 { margin-bottom: 8px; color: var(--gruen-d); }
@@ -256,47 +595,171 @@ tr:hover { background: var(--gruen-l); }
 .btn-grid button { width: 100%; margin: 0; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin: 10px 0; }
-.stat-box { background: var(--gruen-l); padding: 10px; border-radius: var(--radius); text-align: center; }
+.stat-box {
+  background: var(--gruen-l); padding: 10px; border-radius: var(--radius);
+  text-align: center; cursor: pointer; user-select: none;
+  transition: background 0.15s, transform 0.05s;
+  border: 2px solid transparent;
+}
+.stat-box:hover { background: #c8e6c9; }
+.stat-box:active { transform: scale(0.97); }
+.stat-box.active { background: var(--gruen); border-color: var(--gruen-d); }
+.stat-box.active .num, .stat-box.active .lbl { color: #fff; }
+.stat-box.stat-fallwild { background: #ffe0e0; }
+.stat-box.stat-fallwild .num { color: #b71c1c; }
+.stat-box.stat-fallwild.active { background: #b71c1c; border-color: #b71c1c; }
 .stat-box .num { font-size: 1.5em; font-weight: bold; color: var(--gruen-d); }
 .stat-box .lbl { font-size: 11px; color: var(--grau); }
+
+/* Plan / Ist / Rest */
+.plan-ist-wrap { grid-column: 1 / -1; margin-top: 4px; }
+.plan-ist-wrap h4 { color: var(--gruen-d); margin: 6px 0; }
+.plan-ist {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.plan-ist th, .plan-ist td {
+  border: 1px solid #ddd;
+  padding: 5px 6px;
+  text-align: center;
+}
+.plan-ist th {
+  background: var(--gruen);
+  color: white;
+  font-weight: 600;
+}
+.plan-ist tr.sum td { background: var(--gruen-l); font-weight: bold; }
+.plan-ist tr.over td { color: var(--rot); font-weight: bold; }
+
+/* Plan-Editor (Admin) */
+.plan-group { margin: 12px 0; padding: 8px 10px; background: #f7f7f7; border-radius: 6px; }
+.plan-group h5 {
+  margin: 0 0 6px; color: var(--gruen-d);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px;
+}
+.plan-edit { width: 100%; border-collapse: collapse; font-size: 12px; }
+.plan-edit th, .plan-edit td { padding: 3px 4px; border-bottom: 1px solid #e0e0e0; text-align: left; }
+.plan-edit th { background: var(--gruen); color: #fff; text-align: left; font-weight: 600; }
+.plan-edit input[type="number"],
+.plan-edit input[type="text"] { margin: 0; padding: 4px 6px; }
+.plan-edit input[type="checkbox"] { width: 18px; height: 18px; }
+
+/* Meldeliste im Admin */
+.meld-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.meld-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 6px;
+  vertical-align: middle;
+}
+.meld-table td:first-child { text-align: left; }
+.meld-table td:last-child { text-align: right; }
+
+/* Hilfe-Popup: kompakte Accordion-Struktur */
+.help-sections details.help-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: #fafafa;
+}
+.help-sections details.help-section > summary {
+  list-style: none;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+.help-sections details.help-section > summary::-webkit-details-marker { display: none; }
+.help-sections details.help-section > summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--grau);
+  transition: transform 0.15s;
+}
+.help-sections details.help-section[open] > summary::before { transform: rotate(90deg); }
+.help-sections .help-body {
+  padding: 2px 14px 12px 28px;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.45;
+}
+.help-sections .help-body ul,
+.help-sections .help-body ol { padding-left: 18px; margin: 6px 0; }
+.help-sections .help-body code {
+  background: #eceff1; padding: 1px 5px; border-radius: 3px; font-size: 12px;
+}
+
+/* Revier-Header (kompakter Titel im Revier- und Park-Modus) */
+.revier-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 8px;
+}
+.revier-header h2 {
+  margin: 0; font-size: 18px; color: var(--gruen-d);
+}
+.revier-header h2 span { color: var(--grau); font-weight: normal; font-size: 15px; }
+
+/* Hervorhebung gemeldeter Einträge */
+.row-gemeldet td { background: #fff8e1 !important; }
+.card-gemeldet { background: #fff8e1; border-left: 4px solid #c62828; }
 </style>
 </head>
 <body>
+
+<!-- Fixer Admin-Button oben rechts (immer sichtbar) -->
+<button id="adminFab" class="admin-fab" onclick="showLogin()" title="Admin">🔐</button>
+
+<!-- Toast-Container für Erfolgsmeldungen -->
+<div id="toastBox" class="toast-box"></div>
+
+<!-- Mobile Bottom-Navigation -->
+<nav id="bottomNav" class="bottom-nav" style="display:none;">
+  <button data-page="start" onclick="bnGo('start')">
+    <span class="bn-icon">🏠</span><span class="bn-lbl">Start</span>
+  </button>
+  <button data-page="revier" onclick="bnGo('revier')">
+    <span class="bn-icon">🎯</span><span class="bn-lbl">Revier</span>
+  </button>
+  <button data-page="park" onclick="bnGo('park')">
+    <span class="bn-icon">🌲</span><span class="bn-lbl">Park</span>
+  </button>
+  <button onclick="bnMore()">
+    <span class="bn-icon">⋯</span><span class="bn-lbl">Mehr</span>
+  </button>
+</nav>
+
+<!-- Floating Action Button (Neuer Eintrag) - schwebt rechts unten
+     über der Bottom-Nav. Nur in Revier/Park sichtbar. -->
+<button id="floatingFab" class="floating-fab" onclick="bnNewEntry()"
+        title="Neuer Eintrag" style="display:none;">➕</button>
+
 <div class="container">
 
 <!-- STARTSEITE -->
 <div id="start" class="page active">
   <div class="header">
-    <img src="491438944_10226782024328158_4391837002889702168_n.jpg"
-         alt="Revierlogo" onerror="this.style.display='none'" id="logoImg">
+    <img src="logo.jpg"
+         alt="Jagdrevier Prad" onerror="this.style.display='none'" id="logoImg">
     <h2>Abschussliste<br>Jagdrevier Prad</h2>
     <div class="code">Zahlencode: 1024</div>
   </div>
-  <div class="topbar">
-    <button onclick="zeigeSeite('park')">🌲 Park</button>
-    <button onclick="zeigeSeite('revier')">🎯 Revier</button>
-  </div>
-  <div class="topbar">
-    <button class="sec" onclick="exportJSON()">📤 Export</button>
-    <button class="sec" onclick="document.getElementById('importFile').click()">📥 Import</button>
-    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
-  </div>
-  <button class="sec full" onclick="showLogin()" style="margin-top:6px;" id="btnAdminStart">🔐 Admin</button>
-</div>
 
-<!-- PARK -->
-<div id="park" class="page">
-  <div class="header"><h2>🌲 Park</h2></div>
-  <p style="text-align:center;color:var(--grau);padding:30px 0;">Noch nicht aktiv</p>
-  <button class="sec full" onclick="zeigeSeite('start')">⬅ Zurück</button>
+  <!-- Wildkammer-Übersicht: was aktuell eingelagert ist -->
+  <div id="wildkammerBox" class="wildkammer-box"></div>
+
+  <div class="topbar">
+    <button id="btnPark" onclick="openRevierMode('park')">🌲 Park</button>
+    <button onclick="openRevierMode('revier')">🎯 Revier</button>
+  </div>
 </div>
 
 <!-- REVIER -->
 <div id="revier" class="page">
-  <div class="header">
-    <img src="491438944_10226782024328158_4391837002889702168_n.jpg"
-         alt="" style="width:60px;" onerror="this.style.display='none'">
-    <h2 id="revierTitle">Jagdrevier Prad</h2>
+  <div class="revier-header">
+    <h2 id="revierTitle">🎯 Revier · <span id="revierHeaderYear"></span></h2>
     <div id="adminIndicator" style="display:none;">
       <span class="admin-badge">ADMIN</span>
       <span style="font-size:11px;color:var(--grau);cursor:pointer;margin-left:6px;" onclick="adminLogout()">abmelden</span>
@@ -305,10 +768,13 @@ tr:hover { background: var(--gruen-l); }
   <div id="yearTabsContainer" class="year-tabs"></div>
   <div id="statsContainer" class="stats"></div>
   <div class="topbar">
-    <button onclick="neuerEintrag()">➕ Neuer Eintrag</button>
     <button onclick="openMapAll()">🗺️ Karte</button>
-    <button class="sec" onclick="zeigeSeite('start')">⬅ Zurück</button>
+    <button id="btnPlan" onclick="openPlanPopup()">📋 Plan</button>
+    <button class="sec" onclick="toggleSuche()" id="btnSucheToggle">🔍</button>
   </div>
+  <input id="sucheInput" type="search" placeholder="🔍 Suche: Name, Wildart, Ort…"
+         oninput="onSucheChange()" autocomplete="off"
+         style="margin:6px 0;display:none;">
   <div class="table-wrapper"><table id="tabelle"></table></div>
   <div class="cards" id="cardsContainer"></div>
 </div>
@@ -319,7 +785,7 @@ tr:hover { background: var(--gruen-l); }
   <input id="inputName" autocomplete="off" placeholder="Name eingeben...">
   <div id="nameSuggestions" style="margin:4px 0;"></div>
   <button onclick="nextWild()">Weiter ➡</button>
-  <button class="sec" onclick="zeigeSeite('revier')">⬅ Abbrechen</button>
+  <button class="sec" onclick="workflowAbort()">✕ Abbrechen</button>
 </div>
 
 <div id="wf-wild" class="page">
@@ -333,6 +799,7 @@ tr:hover { background: var(--gruen-l); }
     <button onclick="zeigeSeite('wf-andere')">Andere</button>
   </div>
   <button class="sec full" onclick="zeigeSeite('wf-name')">⬅ Zurück</button>
+  <button class="sec full" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-reh" class="page">
@@ -345,6 +812,7 @@ tr:hover { background: var(--gruen-l); }
     <button onclick="setWildDetail('Rehwild','Kitz')">Kitz</button>
   </div>
   <button class="sec full" onclick="zeigeSeite('wf-wild')">⬅ Zurück</button>
+  <button class="sec full" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-hirsch" class="page">
@@ -356,7 +824,8 @@ tr:hover { background: var(--gruen-l); }
     <button onclick="setWildDetail('Rotwild','Schmaltier')">Schmaltier</button>
     <button onclick="setWildDetail('Rotwild','Kalb')">Kalb</button>
   </div>
-  <button class="sec full" onclick="zeigeSeite('wf-wild')">⬅ Zurück</button>
+  <button class="sec full" onclick="zeigeSeite(e.ist_park ? 'wf-name' : 'wf-wild')">⬅ Zurück</button>
+  <button class="sec full" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-gams" class="page">
@@ -368,6 +837,7 @@ tr:hover { background: var(--gruen-l); }
     <button onclick="setWildDetail('Gamswild','Kitz')">Kitz</button>
   </div>
   <button class="sec full" onclick="zeigeSeite('wf-wild')">⬅ Zurück</button>
+  <button class="sec full" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-andere" class="page">
@@ -375,26 +845,37 @@ tr:hover { background: var(--gruen-l); }
   <input id="andereInput" autocomplete="off" placeholder="Wildart eingeben...">
   <button onclick="setAndere()">Weiter ➡</button>
   <button class="sec" onclick="zeigeSeite('wf-wild')">⬅ Zurück</button>
+  <button class="sec" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-gewicht" class="page">
   <h3>⚖️ Gewicht (kg)</h3>
   <select id="inputGewicht"></select>
   <button onclick="nextOrt()">Weiter ➡</button>
+  <button class="sec" onclick="skipGewicht()" style="background:#757575;">⏭ Später eintragen</button>
+  <p class="hint">Bei „Später eintragen" kannst du das Gewicht einmal nach dem Speichern direkt im Eintrag nachtragen.</p>
   <button class="sec" onclick="zeigeSeite('wf-wild')">⬅ Zurück</button>
+  <button class="sec" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-ort" class="page">
   <h3>📍 Örtlichkeit</h3>
-  <div class="btn-grid">
-    <button onclick="setOrt('Prad')">Prad (Karte)</button>
-    <button onclick="zeigeAndereOrt()">Andere</button>
+  <button onclick="useHereAsLocation()" style="width:100%;background:var(--blau);">
+    📡 Jetzt hier (GPS)
+  </button>
+  <div class="btn-grid" style="margin-top:8px;">
+    <button onclick="setOrt('Prad')">🗺️ Karte öffnen</button>
+    <button class="sec" onclick="zeigeAndereOrt()">Andere</button>
   </div>
   <div id="andereOrtBox" style="display:none;margin-top:8px;">
-    <input id="inputOrt" placeholder="Ort eingeben..." autocomplete="off">
+    <input id="inputOrt" placeholder="Ort eingeben..." autocomplete="off"
+           list="ortSuggestions" oninput="buildOrtSuggestions()">
+    <datalist id="ortSuggestions"></datalist>
+    <div id="ortSuggButtons" style="margin:4px 0;"></div>
     <button onclick="setAndereOrt()">Weiter ➡</button>
   </div>
   <button class="sec full" onclick="zeigeSeite('wf-gewicht')">⬅ Zurück</button>
+  <button class="sec full" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-zeit" class="page">
@@ -403,6 +884,7 @@ tr:hover { background: var(--gruen-l); }
   <p class="hint">Automatisch auf aktuelle Uhrzeit gesetzt.</p>
   <button onclick="nextDatum()">Weiter ➡</button>
   <button class="sec" onclick="zeigeSeite('wf-ort')">⬅ Zurück</button>
+  <button class="sec" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-datum" class="page">
@@ -411,6 +893,7 @@ tr:hover { background: var(--gruen-l); }
   <p class="hint">Automatisch auf heute gesetzt.</p>
   <button onclick="nextVerwendung()">Weiter ➡</button>
   <button class="sec" onclick="zeigeSeite('wf-zeit')">⬅ Zurück</button>
+  <button class="sec" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <div id="wf-verwendung" class="page">
@@ -420,6 +903,7 @@ tr:hover { background: var(--gruen-l); }
     <button onclick="gotoSummary('Verkauf')">Verkauf</button>
   </div>
   <button class="sec full" onclick="zeigeSeite('wf-datum')">⬅ Zurück</button>
+  <button class="sec full" onclick="workflowAbort()" style="color:#c62828;">✕ Abbrechen</button>
 </div>
 
 <!-- ZUSAMMENFASSUNG -->
@@ -429,7 +913,7 @@ tr:hover { background: var(--gruen-l); }
   <div class="topbar" style="margin-top:12px;">
     <button onclick="finishSave()">💾 Speichern</button>
     <button class="sec" onclick="editFromSummary()">✏️ Bearbeiten</button>
-    <button class="danger" onclick="zeigeSeite('revier')">✕ Abbrechen</button>
+    <button class="danger" onclick="workflowAbort()">✕ Abbrechen</button>
   </div>
 </div>
 
@@ -443,80 +927,211 @@ tr:hover { background: var(--gruen-l); }
 </div>
 
 <!-- ADMIN PANEL -->
-<div id="admin" class="page">
-  <h3>⚙️ Admin-Einstellungen</h3>
+<div id="admin" class="page admin-page">
+  <div class="admin-header">
+    <h3>⚙️ Admin-Einstellungen</h3>
+    <button class="sm sec" onclick="openHelp()">❓ Hilfe</button>
+  </div>
 
-  <div class="admin-section">
-    <h4>Allgemein</h4>
-    <div class="admin-row">
-      <label>Reviername:</label>
-      <input id="cfgRevier" value="Jagdrevier Prad">
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="tab-allgemein" onclick="adminTab('tab-allgemein')">🏷️ Allgemein</button>
+    <button class="admin-tab" data-tab="tab-plan" onclick="adminTab('tab-plan')">📋 Plan</button>
+    <button class="admin-tab" data-tab="tab-meld" onclick="adminTab('tab-meld')">🔒 Meldungen</button>
+    <button class="admin-tab" data-tab="tab-export" onclick="adminTab('tab-export')">📊 Export</button>
+  </div>
+
+  <!-- TAB: ALLGEMEIN -->
+  <div id="tab-allgemein" class="admin-tab-content active">
+    <div class="admin-section">
+      <h4>🏷️ Revier</h4>
+      <div class="admin-row">
+        <label>Reviername:</label>
+        <input id="cfgRevier" value="Jagdrevier Prad">
+      </div>
+      <div class="admin-row">
+        <label>Zahlencode:</label>
+        <input id="cfgCode" value="1024">
+      </div>
     </div>
-    <div class="admin-row">
-      <label>Zahlencode:</label>
-      <input id="cfgCode" value="1024">
+
+    <div class="admin-section">
+      <h4>🗑️ Abfall-Hinweis</h4>
+      <div class="admin-row">
+        <textarea id="cfgAbfallText" rows="2" style="font-size:14px;"></textarea>
+      </div>
+      <p class="hint">Wird im Abfall-Dialog angezeigt.</p>
+    </div>
+
+    <div class="admin-section">
+      <h4>👁️ Sichtbarkeit</h4>
+      <div class="admin-row">
+        <label style="display:inline-flex;align-items:center;gap:8px;font-weight:normal;">
+          <input id="cfgPlanVisible" type="checkbox" style="width:auto;margin:0;">
+          📋 Plan-Button auch für normale Benutzer anzeigen
+        </label>
+      </div>
+      <p class="hint">Ausgeschaltet: Nur der Admin sieht den Plan-Button.</p>
+      <div class="admin-row" style="margin-top:10px;">
+        <label style="display:inline-flex;align-items:center;gap:8px;font-weight:normal;">
+          <input id="cfgCardsCompact" type="checkbox" style="width:auto;margin:0;">
+          📋 Einträge kompakt anzeigen (zum Aufklappen)
+        </label>
+      </div>
+      <p class="hint">Eingeschaltet: Jeder Eintrag zeigt nur Name · Wildart · Datum, und wird beim Tippen aufgeklappt.</p>
+      <div class="admin-row" style="margin-top:10px;">
+        <label style="display:inline-flex;align-items:center;gap:8px;font-weight:normal;">
+          <input id="cfgParkVisible" type="checkbox" style="width:auto;margin:0;">
+          🌲 Park-Bereich auch für normale Benutzer anzeigen
+        </label>
+      </div>
+      <p class="hint">Ausgeschaltet: Nur der Admin sieht den Park-Button auf der Startseite.</p>
+    </div>
+
+    <div class="admin-section">
+      <h4>🔑 Passwort ändern</h4>
+      <div class="admin-row">
+        <label>Neues Passwort:</label>
+        <input id="cfgNewPass" type="password" placeholder="Neues Passwort">
+      </div>
+      <button class="sm" onclick="changePassword()">Passwort ändern</button>
+    </div>
+  </div>
+ <!-- TAB: ABSCHUSSPLAN -->
+  <div id="tab-plan" class="admin-tab-content">
+    <div class="admin-section">
+      <h4>📋 Abschussplan bearbeiten</h4>
+      <div class="admin-row">
+        <label>Kontext:</label>
+        <select id="planKontext" onchange="renderPlan()">
+          <option value="revier">🎯 Revier</option>
+          <option value="park">🌲 Park</option>
+        </select>
+      </div>
+      <div class="admin-row">
+        <label>Jahr:</label>
+        <select id="planYear" onchange="renderPlan()"></select>
+      </div>
+      <div id="planEditor"></div>
+      <button class="sm" onclick="savePlan()">💾 Plan speichern</button>
     </div>
   </div>
 
-  <div class="admin-section">
-    <h4>Abfall-Hinweistext</h4>
-    <div class="admin-row">
-      <textarea id="cfgAbfallText" rows="2" style="font-size:14px;"></textarea>
-    </div>
-    <p class="hint">Wird im Abfall-Dialog angezeigt.</p>
-  </div>
-
-  <div class="admin-section">
-    <h4>Passwort ändern</h4>
-    <div class="admin-row">
-      <label>Neues Passwort:</label>
-      <input id="cfgNewPass" type="password" placeholder="Neues Passwort">
-    </div>
-    <button class="sm" onclick="changePassword()">Passwort ändern</button>
-  </div>
-
-  <div class="admin-section">
-    <h4>Karten-URL</h4>
-    <div class="admin-row">
-      <input id="cfgMapUrl" placeholder="URL zur Revierkarte">
+  <!-- TAB: MELDUNGEN -->
+  <div id="tab-meld" class="admin-tab-content">
+    <div class="admin-section">
+      <h4>🔒 Einträge gemeldet markieren</h4>
+      <p class="hint">Gemeldete Einträge sind gegen Änderungen gesperrt (außer für Admin).</p>
+      <div class="admin-row">
+        <label>Jahr:</label>
+        <select id="meldYear" onchange="renderMeldListe()"></select>
+      </div>
+      <div id="meldListe"></div>
     </div>
   </div>
 
- <div class="admin-section">
-  <h4>Daten exportieren</h4>
-  <select id="exportYear"></select>
-  <button class="sm" onclick="exportExcel()">📊 Export als Excel</button>
- </div>
+  <!-- TAB: EXPORT -->
+  <div id="tab-export" class="admin-tab-content">
+    <div class="admin-section">
+      <h4>📊 Daten exportieren / drucken</h4>
+      <div class="admin-row">
+        <label>Bereich:</label>
+        <select id="exportKontext">
+          <option value="revier">🎯 Revier</option>
+          <option value="park">🌲 Park</option>
+        </select>
+      </div>
+      <div class="admin-row">
+        <label>Jahr:</label>
+        <select id="exportYear"></select>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <button class="sm" onclick="exportExcel()">📊 CSV/Excel</button>
+        <button class="sm" onclick="openPrintView()">🖨 Drucken / PDF</button>
+      </div>
+      <p class="hint">CSV zum Öffnen in Excel, Drucken für die amtliche Abschussmeldung. Die Auswahl „Bereich" bestimmt, ob Revier- oder Park-Einträge exportiert werden.</p>
+    </div>
 
-  <div style="margin-top:10px;">
-    <button class="full" onclick="saveConfig()">💾 Einstellungen speichern</button>
+    <div class="admin-section">
+      <h4>💾 Backup der Datenbank</h4>
+      <p class="hint">
+        Lädt einen vollständigen JSON-Dump aller Einträge und des Abschussplans
+        herunter. Passwörter werden aus Sicherheitsgründen NICHT exportiert.
+      </p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="sm" onclick="downloadBackup()">⬇ Backup herunterladen</button>
+        <button class="sm sec" onclick="document.getElementById('restoreFile').click()">⬆ Backup einspielen</button>
+        <input type="file" id="restoreFile" accept="application/json"
+               style="display:none" onchange="uploadBackup(event)">
+      </div>
+      <p class="hint" style="color:var(--rot);margin-top:6px;">
+        ⚠ Beim Einspielen werden ALLE aktuellen Einträge und der Plan
+        <b>überschrieben</b>. Vorher also immer ein aktuelles Backup machen.
+      </p>
+    </div>
   </div>
-  <div style="margin-top:6px;">
-    <button class="sec full" onclick="adminToRevier()">➡ Zur Liste (eingeloggt)</button>
-    <button class="sec full" onclick="adminLogoutFull()">🔓 Abmelden</button>
+
+  <!-- Abstand, damit der letzte Inhalt nicht unter der Sticky-Bar verschwindet -->
+  <div style="height:80px;"></div>
+
+  <!-- Sticky Action-Bar unten -->
+  <div class="admin-bottom-bar">
+    <button onclick="saveConfig()" title="Einstellungen speichern">💾 Speichern</button>
+    <button class="sec" onclick="adminToRevier()" title="Zurück zur Tabelle">➡ Liste</button>
+    <button class="sec" onclick="adminLogoutFull()" title="Admin abmelden">🔓 Abmelden</button>
   </div>
 </div>
 
 </div><!-- /container -->
 
+<!-- DRUCKANSICHT (nur sichtbar im Print-Modus) -->
+<div id="druckview">
+  <div class="print-header">
+    <h1>Abschussliste Jagdrevier Prad</h1>
+    <h2 id="druckSubtitle"></h2>
+  </div>
+  <table id="druckTabelle">
+    <thead>
+      <tr>
+        <th>Nr.</th><th>Erleger</th><th>Wildart</th><th>Klasse</th>
+        <th>kg</th><th>Ort</th><th>Zeit</th><th>Datum</th>
+        <th>Entn.</th><th>Verw.</th><th>Abfall</th><th>Gem.</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="print-footer">
+    <div class="sig-block">
+      <div class="sig-line">_______________________</div>
+      <div>Ort, Datum</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line">_______________________</div>
+      <div>Unterschrift Revierleiter</div>
+    </div>
+  </div>
+</div>
+
 <!-- KARTE POPUP -->
 <div id="mapOverlay" class="popup-overlay" style="display:none;" onclick="closeMap()"></div>
-<div id="mapPopup" class="popup" style="display:none;max-width:500px;">
+<div id="mapPopup" class="popup" style="display:none;max-width:560px;">
   <h3>🗺️ Karte Prad</h3>
-  <div id="mapContainer" style="position:relative;">
-    <img id="mapImage" alt="Revierkarte"
-         src="https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png"
-         style="width:100%;display:block;cursor:crosshair;"
-         onerror="this.alt='Karte nicht verfügbar'">
-  </div>
-  <div class="marker-legend">
-    <span><i style="background:yellow"></i>Reh</span>
-    <span><i style="background:red"></i>Rot</span>
-    <span><i style="background:#888"></i>Gams</span>
-    <span><i style="background:blue"></i>Sonst</span>
-  </div>
+  <div id="mapContainer" style="position:relative;width:100%;height:380px;
+       border-radius:8px;overflow:hidden;"></div>
+  <div id="mapLegend" class="marker-legend"></div>
   <p class="hint" id="mapHint">Tippe auf die Karte, um den Abschussort zu markieren.</p>
+  <div class="topbar" style="margin-top:6px;">
+    <button class="sm sec" onclick="mapUseMyLocation()">📍 Mein Standort</button>
+    <button class="sm sec" onclick="mapCenterPrad()">🏡 Prad zentrieren</button>
+  </div>
   <button class="full" onclick="closeMap()">OK</button>
+</div>
+
+<!-- PLAN POPUP -->
+<div id="planOverlay" class="popup-overlay" style="display:none;" onclick="closePlanPopup()"></div>
+<div id="planPopup" class="popup" style="display:none;max-width:560px;">
+  <h3>📋 Abschussplan <span id="planPopupYear" style="font-weight:normal;font-size:14px;"></span></h3>
+  <div id="planPopupBody"></div>
+  <button class="full" onclick="closePlanPopup()">Schließen</button>
 </div>
 
 <script>
@@ -524,20 +1139,360 @@ tr:hover { background: var(--gruen-l); }
    ABSCHUSSLISTE JAGDREVIER PRAD – V3
    ============================================================ */
 
-let config = JSON.parse(localStorage.getItem("cfg") || '{}');
-if (!config.revier) config.revier = "Jagdrevier Prad";
-if (!config.code) config.code = "1024";
-if (!config.pass) config.pass = "1234";
-if (!config.mapUrl) config.mapUrl = "https://raw.githubusercontent.com/MichaelUnterkircher/meine-website/main/Revier2.png";
-if (!config.abfallText) config.abfallText = "ACHTUNG: Abfall nur während Parkjagd.";
+/* ---------- PWA: Service Worker registrieren ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err =>
+      console.warn('Service Worker konnte nicht registriert werden:', err)
+    );
+  });
+}
 
-let daten = JSON.parse(localStorage.getItem("daten") || "[]");
+/* ---------- Online/Offline-Indikator ---------- */
+let isOnline = navigator.onLine;
+window.addEventListener('online',  () => { isOnline = true;  flushOutbox(); updateOfflineBanner(); });
+window.addEventListener('offline', () => { isOnline = false; updateOfflineBanner(); });
+
+function updateOfflineBanner() {
+  let b = document.getElementById('offlineBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'offlineBanner';
+    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#f57c00;color:#fff;'
+                    + 'text-align:center;padding:6px;font-size:13px;z-index:1200;'
+                    + 'box-shadow:0 -2px 6px rgba(0,0,0,0.2);';
+    document.body.appendChild(b);
+  }
+  const queued = outboxSize();
+  if (!isOnline) {
+    b.textContent = '📴 Offline — neue Einträge werden gespeichert und später hochgeladen' +
+                    (queued > 0 ? ` (${queued} ausstehend)` : '');
+    b.style.display = 'block';
+  } else if (queued > 0) {
+    b.textContent = `📡 Online — ${queued} Eintrag${queued === 1 ? '' : 'e'} wird/werden synchronisiert…`;
+    b.style.background = '#1565c0';
+    b.style.display = 'block';
+  } else {
+    b.style.display = 'none';
+    b.style.background = '#f57c00';
+  }
+}
+
+/* ---------- Offline-Queue (localStorage, kein IndexedDB für Einfachheit) ---------- */
+function outboxRead() {
+  try { return JSON.parse(localStorage.getItem('outbox') || '[]'); }
+  catch (_) { return []; }
+}
+function outboxWrite(arr) { localStorage.setItem('outbox', JSON.stringify(arr)); }
+function outboxSize() { return outboxRead().length; }
+
+function queueEntry(body) {
+  const q = outboxRead();
+  q.push({ body, t: Date.now() });
+  outboxWrite(q);
+  updateOfflineBanner();
+}
+
+async function flushOutbox() {
+  if (!isOnline) return;
+  const q = outboxRead();
+  if (!q.length) return;
+  const remaining = [];
+  for (const item of q) {
+    try {
+      const row = await api.createEintrag(item.body);
+      // Nur dazuhängen, wenn nicht schon vorhanden (z. B. doppelt auf verschiedenen Geräten)
+      if (typeof applyRow === 'function') applyRow(row);
+    } catch (_) {
+      remaining.push(item);
+    }
+  }
+  outboxWrite(remaining);
+  if (typeof updateYearTabs === 'function') updateYearTabs();
+  if (typeof anzeigen === 'function') anzeigen();
+  updateOfflineBanner();
+}
+
+/* ---------- Kosmetische Client-Konfiguration ---------- */
+/* Wird beim Start aus der DB geladen (api/config.php) und nach
+   Änderung dort gespeichert. localStorage dient nur als Offline-
+   Fallback-Cache, damit die Seite auch ohne Netz sinnvoll startet. */
+let config = JSON.parse(localStorage.getItem("cfg") || '{}');
+// One-time-Migration: alter Name "Jagdverein Prad" → "Jagdrevier Prad"
+if (config.revier === "Jagdverein Prad") {
+  config.revier = "Jagdrevier Prad";
+  localStorage.setItem("cfg", JSON.stringify(config));
+}
+applyConfigDefaults(config);
+
+function applyConfigDefaults(c) {
+  if (!c.revier) c.revier = "Jagdrevier Prad";
+  if (!c.code) c.code = "1024";
+  if (!c.abfallText) c.abfallText = "ACHTUNG: Abfall nur während Parkjagd.";
+  if (typeof c.planVisible  === "undefined") c.planVisible  = true;
+  if (typeof c.cardsCompact === "undefined") c.cardsCompact = true;
+  if (typeof c.parkVisible  === "undefined") c.parkVisible  = true;
+}
+
+/* Typen-Fix: aus der DB kommen alle Werte als String.
+   Wir konvertieren Booleans wieder zurück. */
+function coerceConfig(raw) {
+  const BOOL_KEYS = ["planVisible", "cardsCompact", "parkVisible"];
+  const out = {};
+  for (const k of Object.keys(raw || {})) {
+    let v = raw[k];
+    if (BOOL_KEYS.includes(k)) {
+      v = (v === "1" || v === "true" || v === true);
+    }
+    out[k] = v;
+  }
+  return out;
+}
+
+/* Lädt die Config vom Server und merged sie in die lokale Variable. */
+async function loadRemoteConfig() {
+  try {
+    const remote = await api.getConfig();
+    const coerced = coerceConfig(remote);
+    // Merge: Server-Werte überschreiben lokale Defaults, lokale Werte
+    // bleiben für Felder, die der Server (noch) nicht hat.
+    Object.assign(config, coerced);
+    applyConfigDefaults(config);
+    // Auch lokal cachen für den nächsten Offline-Start.
+    try { localStorage.setItem("cfg", JSON.stringify(config)); } catch (_) {}
+  } catch (err) {
+    // Kein Netz / Server weg → wir bleiben bei den lokalen Werten.
+    console.warn("[config] Konnte Server-Config nicht laden:", err);
+  }
+}
+
+/* ---------- Echte Daten: werden aus der API geladen ---------- */
+let daten = [];                 // alle Einträge (aus api/daten.php)
+let abschussplan = {};          // Plan-Cache pro Jahr (aus api/plan.php)
 let e = {};
 let aktuellerPunkt = null;
 let mapMode = "input";
 let viewIndex = null;
+let singleViewEntry = null;   // beim Single-View per Tabellenklick gesetzt
+let editLocationId  = null;   // beim Edit-Location-Modus: welche id wird bearbeitet
 let selectedYear = new Date().getFullYear();
+let statsFilter = "";         // Filter per Klick auf eine Stat-Kachel
+let appMode = "revier";       // "revier" oder "park" - steuert die Liste
 let isAdmin = false;
+let currentUser = null;
+
+/* ============================================================
+   API-Helper
+   ============================================================ */
+const api = {
+  async req(url, options = {}) {
+    const res = await fetch(url, {
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) { /* empty body */ }
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+    return data.data;
+  },
+  listDaten(jahr) {
+    return this.req('api/daten.php' + (jahr ? '?jahr=' + jahr : ''));
+  },
+  createEintrag(body) {
+    return this.req('api/daten.php', { method: 'POST', body: JSON.stringify(body) });
+  },
+  updateEintrag(id, body) {
+    return this.req('api/daten.php?id=' + id, { method: 'PUT', body: JSON.stringify(body) });
+  },
+  deleteEintrag(id) {
+    return this.req('api/daten.php?id=' + id, { method: 'DELETE' });
+  },
+  eintragAction(id, action, value) {
+    return this.req('api/daten.php', {
+      method: 'POST',
+      body: JSON.stringify({ action, id, value }),
+    });
+  },
+  getPlan(jahr, kontext) {
+    const k = kontext || 'revier';
+    return this.req('api/plan.php?jahr=' + jahr + '&kontext=' + encodeURIComponent(k));
+  },
+  savePlan(jahr, plan, kontext) {
+    return this.req('api/plan.php', {
+      method: 'POST',
+      body: JSON.stringify({ jahr, plan, kontext: kontext || 'revier' }),
+    });
+  },
+  authStatus() { return this.req('api/auth.php'); },
+  login(username, password) {
+    return this.req('api/auth.php', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'login', username, password }),
+    });
+  },
+  logout() {
+    return this.req('api/auth.php', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'logout' }),
+    });
+  },
+  changePassword(oldPw, newPw) {
+    return this.req('api/auth.php', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'change_pw', old: oldPw, new: newPw }),
+    });
+  },
+  getConfig() { return this.req('api/settings.php'); },
+  saveConfig(values) {
+    return this.req('api/settings.php', {
+      method: 'POST',
+      body: JSON.stringify({ values }),
+    });
+  },
+};
+
+/* Mapper zwischen DB-Zeile und Frontend-Objekt.
+   Neue Einträge speichern echte GPS-Koordinaten in koord_lat / koord_lng.
+   koord_x / koord_y sind nur noch Legacy (wird nicht mehr geschrieben). */
+function dbToClient(row) {
+  const rawLat = row.koord_lat;
+  const rawLng = row.koord_lng;
+  let lat = null, lng = null;
+  if (rawLat !== null && rawLat !== undefined && rawLat !== '') {
+    const f = parseFloat(rawLat);
+    if (!isNaN(f) && isFinite(f)) lat = f;
+  }
+  if (rawLng !== null && rawLng !== undefined && rawLng !== '') {
+    const f = parseFloat(rawLng);
+    if (!isNaN(f) && isFinite(f)) lng = f;
+  }
+  return {
+    id:         Number(row.id),   // immer als Zahl speichern
+    name:       row.name || "",
+    wildart:    row.wildart || "",
+    wild:       row.wild || "",
+    gewicht:    row.gewicht,
+    ort:        row.ort || "",
+    latlng:     (lat != null && lng != null) ? { lat, lng } : null,
+    zeit:       row.zeit || "",
+    datum:      row.datum || "",
+    verwendung: row.verwendung || "",
+    entnommen:  row.entnommen || "",
+    abfall:       row.abfall,
+    gemeldet:     !!row.gemeldet,
+    ist_park:     !!row.ist_park,
+    ist_fallwild: !!row.ist_fallwild,
+    wetter:       row.wetter || "",
+  };
+}
+function clientToDb(ev) {
+  return {
+    name:       ev.name,
+    wildart:    ev.wildart,
+    wild:       ev.wild,
+    gewicht:    ev.gewicht !== "" ? ev.gewicht : null,
+    ort:        ev.ort,
+    koord_lat:  ev.latlng ? ev.latlng.lat : null,
+    koord_lng:  ev.latlng ? ev.latlng.lng : null,
+    zeit:       ev.zeit,
+    datum:      ev.datum,
+    verwendung: ev.verwendung,
+    entnommen:  ev.entnommen || null,
+    abfall:       ev.abfall,
+    gemeldet:     ev.gemeldet ? 1 : 0,
+    ist_park:     ev.ist_park ? 1 : 0,
+    ist_fallwild: ev.ist_fallwild ? 1 : 0,
+    wetter:       ev.wetter || null,
+  };
+}
+
+async function reloadDaten() {
+  try {
+    const rows = await api.listDaten();
+    daten = rows.map(dbToClient);
+  } catch (err) {
+    // Offline-Start: lies die zuletzt bekannten Daten aus dem lokalen Cache
+    try {
+      const cached = JSON.parse(localStorage.getItem("daten_cache") || "[]");
+      daten = Array.isArray(cached) ? cached : [];
+      if (!navigator.onLine) {
+        console.log("Offline-Start mit " + daten.length + " gecachten Einträgen.");
+      } else {
+        console.warn("Server nicht erreichbar – zeige Cache.", err);
+      }
+    } catch (_) { daten = []; }
+  }
+  // Cache für Offline aktualisieren
+  try { localStorage.setItem("daten_cache", JSON.stringify(daten)); } catch (_) {}
+}
+
+async function ensurePlan(year, kontextOverride) {
+  const kontext = kontextOverride || appMode || "revier";
+  const key = kontext + ":" + year;
+  if (abschussplan[key]) return abschussplan[key];
+  try {
+    const res = await api.getPlan(year, kontext);
+    abschussplan[key] = normalizePlan(res.plan || {}, kontext);
+  } catch (err) {
+    abschussplan[key] = normalizePlan({}, kontext);
+  }
+  return abschussplan[key];
+}
+
+/* Einheitliches Plan-Format: { Wildart: { Klasse: { plan, enabled, matches } } }
+   Nimmt sowohl altes Integer-Format als auch neues Objekt-Format entgegen
+   und füllt fehlende Default-Klassen auf.
+   Für "park" wird nur Rotwild als Default aufgebaut. */
+function normalizePlan(raw, kontext) {
+  const out = {};
+  const defaults = (kontext === "park") ? PLAN_KLASSEN_PARK : PLAN_KLASSEN;
+  Object.keys(defaults).forEach(art => {
+    out[art] = {};
+    defaults[art].forEach(k => {
+      out[art][k] = { plan: 0, extern: 0, enabled: true, matches: "" };
+    });
+  });
+  // Werte aus raw übernehmen (auch custom Wildarten/Klassen)
+  Object.keys(raw || {}).forEach(art => {
+    if (!out[art]) out[art] = {};
+    Object.keys(raw[art] || {}).forEach(k => {
+      const v = raw[art][k];
+      if (typeof v === "number") {
+        out[art][k] = { plan: v, extern: 0, enabled: true, matches: "" };
+      } else if (v && typeof v === "object") {
+        out[art][k] = {
+          plan:    parseInt(v.plan,   10) || 0,
+          extern:  parseInt(v.extern, 10) || 0,
+          enabled: v.enabled !== false,
+          matches: (v.matches || "").toString(),
+        };
+      }
+    });
+  });
+  return out;
+}
+
+/* Klassen-Struktur für den Abschussplan */
+const PLAN_KLASSEN = {
+  "Rehwild":  ["T-Bock", "J-Bock", "Geiß", "Schmalgeiß", "Kitz"],
+  "Rotwild":  ["T-Hirsch", "J-Hirsch", "Tier", "Schmaltier", "Kalb"],
+  "Gamswild": ["Bock", "Geiß", "Jährling", "Kitz"]
+};
+const PLAN_KLASSEN_PARK = {
+  "Rotwild":  ["T-Hirsch", "J-Hirsch", "Tier", "Schmaltier", "Kalb"]
+};
+
+/* Lese-Zugriff auf den Plan im Cache. Rufer muss vorher ensurePlan(year)
+   aufgerufen haben, sonst kommt ein leerer Default-Plan zurück. */
+function getPlan(year, kontextOverride) {
+  const kontext = kontextOverride || appMode || "revier";
+  const key = kontext + ":" + year;
+  if (abschussplan[key]) return abschussplan[key];
+  return normalizePlan({}, kontext);
+}
 
 /* ---------- Init ---------- */
 function fillExportYears() {
@@ -556,44 +1511,111 @@ function fillExportYears() {
   sel.value = selectedYear;
 }
 
-function init() {
+async function init() {
   const sel = document.getElementById("inputGewicht");
   sel.innerHTML = "";
-  for (let i = 0; i <= 200; i++) {
+  // Platzhalter, damit 0 kg nicht aus Versehen als Default ausgewählt ist.
+  {
+    const ph = document.createElement("option");
+    ph.value = ""; ph.text = "-- bitte wählen --"; ph.disabled = true; ph.selected = true;
+    sel.appendChild(ph);
+  }
+  for (let i = 1; i <= 200; i++) {
     const o = document.createElement("option");
     o.value = i; o.text = i + " kg";
     sel.appendChild(o);
   }
+
+  // Login-Status prüfen (bleibt auch nach Reload erhalten, weil PHP-Session)
+  try {
+    const a = await api.authStatus();
+    isAdmin = a && a.rolle === 'admin';
+    currentUser = (a && a.logged_in) ? a.username : null;
+  } catch (_) { isAdmin = false; currentUser = null; }
+
+  // Server-Config laden (überschreibt den lokalen Cache). Die Werte
+  // gelten für alle Geräte, werden aber lokal gecached, damit die
+  // Seite offline startet.
+  await loadRemoteConfig();
+
+  // Daten laden
+  await reloadDaten();
+  await ensurePlan(selectedYear);
+
   applyConfig();
   updateYearTabs();
   anzeigen();
+
+  // Offline-Banner anzeigen + versuchen, Outbox zu leeren
+  updateOfflineBanner();
+  flushOutbox();
+  updateBottomNav();
 }
 
 function applyConfig() {
   document.getElementById("cfgRevier").value = config.revier;
   document.getElementById("cfgCode").value = config.code;
-  document.getElementById("cfgMapUrl").value = config.mapUrl;
   document.getElementById("cfgAbfallText").value = config.abfallText;
-  document.getElementById("mapImage").src = config.mapUrl;
+  // Hinweis: Karte ist jetzt Leaflet/OSM, keine konfigurierbare Bild-URL mehr.
 
   // Header texts
   document.querySelectorAll('.header h2')[0].innerHTML = 'Abschussliste<br>' + esc(config.revier);
-  document.getElementById("revierTitle").textContent = config.revier;
+  // revierTitle wird von updateRevierHeader() verwaltet
+  if (typeof updateRevierHeader === "function") updateRevierHeader();
   document.querySelector('.header .code').textContent = 'Zahlencode: ' + config.code;
 
   // Admin indicator
   document.getElementById("adminIndicator").style.display = isAdmin ? "block" : "none";
-  document.getElementById("btnAdminStart").textContent = isAdmin ? "⚙️ Admin-Einstellungen" : "🔐 Admin";
+
+  // Plan-Button: für normale Benutzer nur sichtbar, wenn Admin ihn
+  // aktiviert hat. Admin sieht ihn immer.
+  const btnPlan = document.getElementById("btnPlan");
+  if (btnPlan) {
+    const planVisible = (config.planVisible !== false) || isAdmin;
+    btnPlan.style.display = planVisible ? "" : "none";
+  }
+  // Park-Button auf Startseite: gleiche Logik
+  const btnPark = document.getElementById("btnPark");
+  if (btnPark) {
+    const parkVisible = (config.parkVisible !== false) || isAdmin;
+    btnPark.style.display = parkVisible ? "" : "none";
+  }
+  // Checkboxen im Admin-Panel
+  const cfgPlan = document.getElementById("cfgPlanVisible");
+  if (cfgPlan) cfgPlan.checked = (config.planVisible !== false);
+  const cfgCC = document.getElementById("cfgCardsCompact");
+  if (cfgCC) cfgCC.checked = (config.cardsCompact !== false);
+  const cfgPV = document.getElementById("cfgParkVisible");
+  if (cfgPV) cfgPV.checked = (config.parkVisible !== false);
+
+  const fab = document.getElementById("adminFab");
+  if (fab) {
+    fab.textContent = isAdmin ? "⚙️" : "🔐";
+    fab.title = isAdmin ? "Admin-Einstellungen" : "Admin-Login";
+    fab.classList.toggle("admin-active", !!isAdmin);
+  }
 }
 
 function saveCfg() { localStorage.setItem("cfg", JSON.stringify(config)); }
-function speichern() { localStorage.setItem("daten", JSON.stringify(daten)); }
+/* speichern() ist ein No-Op: alle Daten leben in der DB.
+   Die Funktion bleibt als Alias, weil viele Stellen sie aufrufen. */
+function speichern() { /* no-op: DB ist die Wahrheit */ }
 
 /* ---------- Navigation ---------- */
+/* ---------- Workflow-Abbruch ---------- */
+function workflowAbort() {
+  if (!confirm("Eintrag wirklich abbrechen? Alles bisher eingetippte geht verloren.")) return;
+  e = {};
+  aktuellerPunkt = null;
+  zeigeSeite("revier");
+  toast("Eintrag abgebrochen", "warn");
+}
+
 function zeigeSeite(id) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const el = document.getElementById(id);
   if (el) el.classList.add("active");
+  if (typeof updateBottomNav === "function") updateBottomNav();
 }
 
 /* ---------- Year ---------- */
@@ -611,33 +1633,806 @@ function updateYearTabs() {
     const s = document.createElement("span");
     s.className = "year-tab" + (y === selectedYear ? " active" : "");
     s.textContent = y;
-    s.onclick = () => { selectedYear = y; updateYearTabs(); anzeigen(); };
+    s.onclick = async () => {
+      selectedYear = y;
+      updateYearTabs();
+      updateRevierHeader();
+      await ensurePlan(y);
+      anzeigen();
+    };
     c.appendChild(s);
   });
 }
 
-function getFiltered() {
-  return daten.filter(d => d.datum && new Date(d.datum).getFullYear() === selectedYear);
+let sucheText = "";
+function onSucheChange() {
+  const el = document.getElementById("sucheInput");
+  sucheText = (el ? el.value : "").toLowerCase().trim();
+  anzeigen();
 }
-function realIdx(fi) { return daten.indexOf(getFiltered()[fi]); }
+function matchesSearch(d, q) {
+  if (!q) return true;
+  const hay = [d.name, d.wildart, d.wild, d.ort, d.verwendung]
+              .map(x => (x || "").toString().toLowerCase()).join(" ");
+  return hay.includes(q);
+}
+/* Wechsel zwischen Revier- und Park-Ansicht. Beide zeigen dieselbe
+   Revier-Seite, aber mit unterschiedlichem appMode-Filter. */
+async function openRevierMode(mode) {
+  appMode = (mode === "park") ? "park" : "revier";
+  statsFilter = "";
+  updateRevierHeader();
+  // Such-Input zurücksetzen und ausblenden
+  const sEl = document.getElementById("sucheInput");
+  if (sEl) { sEl.value = ""; sEl.style.display = "none"; }
+  sucheText = "";
+  await ensurePlan(selectedYear);
+  updateYearTabs();
+  anzeigen();
+  zeigeSeite("revier");
+}
+
+function updateRevierHeader() {
+  const titleEl = document.getElementById("revierTitle");
+  const yearEl  = document.getElementById("revierHeaderYear");
+  if (!titleEl) return;
+  const prefix = appMode === "park" ? "🌲 Park" : "🎯 Revier";
+  titleEl.innerHTML = prefix + ' · <span id="revierHeaderYear">'
+                    + selectedYear + '</span>';
+}
+
+function toggleSuche() {
+  const s = document.getElementById("sucheInput");
+  if (!s) return;
+  if (s.style.display === "none" || s.style.display === "") {
+    s.style.display = "block";
+    s.focus();
+  } else {
+    s.style.display = "none";
+    s.value = "";
+    sucheText = "";
+    anzeigen();
+  }
+}
+
+function getFiltered() {
+  const isPark = (appMode === "park");
+  const list = daten.filter(d => {
+    if (!d.datum) return false;
+    if (new Date(d.datum).getFullYear() !== selectedYear) return false;
+    if (!!d.ist_park !== isPark) return false;
+    // Stats-Filter: __fallwild__ zeigt nur Fallwild-Einträge,
+    // andere Filter-Werte zeigen die gewählte Wildart/Klasse (ohne Fallwild).
+    if (statsFilter === "__fallwild__") {
+      if (!d.ist_fallwild) return false;
+    } else if (statsFilter) {
+      if (d.ist_fallwild) return false;
+      if ((d.wildart || "Andere") !== statsFilter &&
+          (d.wild || "–") !== statsFilter) return false;
+    }
+    if (!matchesSearch(d, sucheText)) return false;
+    return true;
+  });
+  // Chronologisch: neueste zuerst, bei gleichem Datum nach Schusszeit,
+  // bei gleicher Zeit nach id (Tie-Breaker).
+  list.sort((a, b) => {
+    const da = (b.datum || '').localeCompare(a.datum || '');
+    if (da !== 0) return da;
+    const ta = (b.zeit || '').localeCompare(a.zeit || '');
+    if (ta !== 0) return ta;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+  });
+  return list;
+}
+
+function setStatsFilter(wildart) {
+  // Toggle: nochmal auf die gleiche Kachel klicken hebt den Filter auf
+  statsFilter = (statsFilter === wildart) ? "" : wildart;
+  anzeigen();
+}
+/* Liefert die id eines Filter-Index (nicht mehr den Array-Index!) */
+function realId(fi) { const d = getFiltered()[fi]; return d ? d.id : null; }
+/* Alias aus Kompatibilitätsgründen, falls noch irgendwo realIdx aufgerufen wird */
+function realIdx(fi) { return realId(fi); }
+function findById(id) { return daten.findIndex(d => d.id === id); }
+
+/* ---------- Wildkammer-Status (auf der Startseite) ---------- */
+function updateWildkammer() {
+  const box = document.getElementById("wildkammerBox");
+  if (!box) return;
+  // In der Kühlung = Eintrag existiert, aber entnommen ist leer/null
+  const inStorage = daten.filter(d => d.datum && !d.entnommen);
+  const byArt = {};
+  inStorage.forEach(d => {
+    const a = d.wildart || "Sonstiges";
+    byArt[a] = (byArt[a] || 0) + 1;
+  });
+
+  let html = '<h4>❄️ Kühlzelle</h4>';
+  if (!inStorage.length) {
+    html += '<div class="wk-empty">– leer –</div>';
+  } else {
+    Object.keys(byArt).sort().forEach(k => {
+      html += `<div class="wk-row"><span>${esc(k)}</span><span class="wk-count">${byArt[k]}</span></div>`;
+    });
+    html += `<div class="wk-row" style="margin-top:6px;border-top:1px solid rgba(46,125,50,0.3);padding-top:4px;">
+      <span><b>Gesamt</b></span><span class="wk-count">${inStorage.length}</span>
+    </div>`;
+  }
+  box.innerHTML = html;
+}
 
 /* ---------- Stats ---------- */
 function updateStats() {
-  const fd = getFiltered();
+  // Die Kacheln zählen IMMER alle Einträge des Jahres im aktuellen
+  // appMode (Revier/Park), unabhängig vom Such-/Stats-Filter.
+  const isPark = (appMode === "park");
+  const fdAll = daten.filter(d =>
+    d.datum &&
+    new Date(d.datum).getFullYear() === selectedYear &&
+    (!!d.ist_park === isPark)
+  );
+  // Im Park gruppieren wir nach Klasse (T-Hirsch ...), im Revier nach Wildart.
+  // Fallwild wird zusätzlich als eigene Kategorie gezählt.
   const counts = {};
-  fd.forEach(d => { const w = d.wildart || "Andere"; counts[w] = (counts[w]||0) + 1; });
-  let h = `<div class="stat-box"><div class="num">${fd.length}</div><div class="lbl">Gesamt</div></div>`;
-  Object.keys(counts).sort().forEach(k => {
-    h += `<div class="stat-box"><div class="num">${counts[k]}</div><div class="lbl">${esc(k)}</div></div>`;
+  let fallCount = 0;
+  fdAll.forEach(d => {
+    if (d.ist_fallwild) { fallCount++; return; }
+    const k = isPark ? (d.wild || "–") : (d.wildart || "Andere");
+    counts[k] = (counts[k] || 0) + 1;
   });
+
+  const active = statsFilter;
+  const totalClass = !active ? "stat-box active" : "stat-box";
+  let h = `<div class="${totalClass}" onclick="setStatsFilter('')" title="Alle anzeigen">
+             <div class="num">${fdAll.length}</div><div class="lbl">Gesamt</div>
+           </div>`;
+  Object.keys(counts).sort().forEach(k => {
+    const cls = "stat-box" + (active === k ? " active" : "");
+    h += `<div class="${cls}" onclick="setStatsFilter('${esc(k).replace(/'/g, "\\'")}')" title="Nur ${esc(k)}">
+            <div class="num">${counts[k]}</div><div class="lbl">${esc(k)}</div>
+          </div>`;
+  });
+  if (fallCount > 0) {
+    const cls = "stat-box stat-fallwild" + (active === "__fallwild__" ? " active" : "");
+    h += `<div class="${cls}" onclick="setStatsFilter('__fallwild__')" title="Nur Fallwild">
+            <div class="num">${fallCount}</div><div class="lbl">☠ Fallwild</div>
+          </div>`;
+  }
   document.getElementById("statsContainer").innerHTML = h;
+}
+
+/* Popup: Abschussplan für das gewählte Jahr anzeigen */
+/* Hilfe-Popup für den Admin */
+function openHelp() {
+  const ov = document.createElement("div");
+  ov.style.cssText =
+    "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;display:block;";
+  const box = document.createElement("div");
+  box.style.cssText =
+    "position:fixed;left:4%;right:4%;top:3vh;" +
+    "max-height:94vh;overflow-y:auto;" +
+    "background:#fff;padding:16px 18px;border-radius:12px;" +
+    "box-shadow:0 10px 40px rgba(0,0,0,0.4);" +
+    "z-index:1000;display:block;" +
+    "-webkit-overflow-scrolling:touch;";
+  ov.onclick = () => { ov.remove(); box.remove(); };
+  box.onclick = ev => ev.stopPropagation();
+
+  const parkOn  = (config.parkVisible  !== false) || isAdmin;
+  const planOn  = (config.planVisible  !== false) || isAdmin;
+
+  /* Jeder Abschnitt ist ein Objekt mit:
+       - key: eindeutiger Identifier
+       - icon, title
+       - content: HTML
+       - adminOnly: nur für Admin sichtbar
+       - show: optional, explizite Sichtbarkeits-Funktion */
+  const sections = [
+    {
+      icon: "🎯", title: "Neuen Eintrag anlegen",
+      content:
+        "Tippe auf den grünen <b>➕</b>-Button rechts unten in der Revier- " +
+        "oder Park-Liste. Du gehst der Reihe nach durch die Schritte: " +
+        "Erleger → Wildart → Klasse → Gewicht → Ort → Zeit → Datum → " +
+        "Verwendung → Zusammenfassung → Speichern. Datum und Uhrzeit " +
+        "sind auf &bdquo;jetzt&rdquo; vorausgefüllt."
+    },
+    {
+      icon: "📍", title: "Ort setzen",
+      content:
+        "<ul><li><b>📡 Jetzt hier</b> – per GPS dein aktueller Standort. " +
+        "Funktioniert nur mit HTTPS und GPS-Empfang.</li>" +
+        "<li><b>🗺️ Karte öffnen</b> – auf den Erlegungsort tippen und OK.</li>" +
+        "<li><b>Andere</b> – freier Ortsname, wenn nicht in Prad.</li></ul>"
+    },
+    {
+      icon: "❄️", title: "Kühlzelle",
+      content:
+        "Auf der Startseite siehst du, wie viele Tiere aktuell eingelagert " +
+        "und noch nicht entnommen sind – gruppiert nach Wildart. " +
+        "Revier- und Park-Einträge werden zusammen gezählt."
+    },
+    {
+      icon: "📊", title: "Stat-Kacheln als Filter",
+      content:
+        "Im Revier-/Park-Tab kannst du auf die farbigen Kacheln (z.B. " +
+        "&bdquo;Rehwild 3&ldquo;) tippen – die Liste wird dann auf diese Wildart oder " +
+        "Klasse gefiltert. Nochmal tippen oder &bdquo;Gesamt&ldquo; → Filter aus."
+    },
+    {
+      icon: "🔍", title: "Suche",
+      content:
+        "In der Revier-/Park-Toolbar gibt es ein 🔍-Symbol. Ein Tap " +
+        "öffnet das Suchfeld, in dem du nach Name, Wildart, Klasse, " +
+        "Ort oder Verwendung suchen kannst."
+    },
+    {
+      icon: "🗺", title: "Karte",
+      content:
+        "Im ⋯ Mehr-Menü &bdquo;Karte&ldquo; tippen. Zeigt alle Abschüsse des aktuellen " +
+        "Jahres als farbige Punkte. Mit <b>🛰 Satellit</b> oben rechts " +
+        "schaltest du zwischen Karten- und Satellitenansicht um. Mit " +
+        "<b>📍 Mein Standort</b> springst du zu deiner aktuellen Position."
+    },
+    {
+      show: () => planOn,
+      icon: "📋", title: "Abschussplan (Popup)",
+      content:
+        "Im ⋯ Mehr-Menü &bdquo;Plan&ldquo; tippen. Zeigt das Monats-Balkendiagramm und " +
+        "die Plan/Ist/Extern/Rest-Tabelle. Rest-Formel: " +
+        "<code>Plan − Ist − Extern</code>. Fallwild wird nicht im Plan " +
+        "gezählt."
+    },
+    {
+      icon: "📴", title: "Offline-Modus",
+      content:
+        "Die App ist eine PWA: du kannst sie über das Browser-Menü als " +
+        "App auf dem Homescreen installieren. Sie funktioniert auch ohne " +
+        "Internet. Einträge ohne Empfang werden in einer Warteschlange " +
+        "gesammelt und automatisch hochgeladen, sobald das Netz wieder " +
+        "da ist. Ein orangener Banner zeigt den Offline-Status an."
+    },
+    {
+      icon: "🌡", title: "Wetter",
+      content:
+        "Wenn ein Abschuss mit GPS-Koordinaten gespeichert wird, lädt " +
+        "die App nach dem Speichern automatisch die Wetterlage zur " +
+        "Schusszeit (Temperatur, Wind, Niederschlag) nach und zeigt sie " +
+        "im Eintrag."
+    },
+
+    /* -------- Admin-only Sektionen -------- */
+    {
+      adminOnly: true,
+      icon: "🔐", title: "Admin-Login",
+      content:
+        "Oben rechts der Button 🔐. Als Admin kannst du Einträge bearbeiten, " +
+        "löschen und sperren, den Abschussplan pflegen sowie drucken. " +
+        "Unter &bdquo;Passwort ändern&ldquo; kannst du dein Passwort neu setzen – das " +
+        "alte wird zur Bestätigung abgefragt."
+    },
+    {
+      adminOnly: true,
+      icon: "🔒", title: "Eintrag &bdquo;gemeldet&ldquo; sperren",
+      content:
+        "Gemeldete Einträge sind gegen Änderungen geschützt. Typischer " +
+        "Ablauf:<ol><li>Jäger trägt den Abschuss ein.</li>" +
+        "<li>Du reichst die Liste als PDF beim Jagdverband ein.</li>" +
+        "<li>Danach setzt du im Admin → Meldungen die Einträge auf 🔒, " +
+        "damit sie nicht mehr verändert werden können.</li></ol>" +
+        "Admin kann die Sperre jederzeit wieder aufheben."
+    },
+    {
+      adminOnly: true,
+      icon: "📋", title: "Abschussplan bearbeiten",
+      content:
+        "Im Admin → Plan. Kontext (🎯 Revier / 🌲 Park) wählen, Jahr " +
+        "wählen, pro Klasse: ✓ Haken = zählt, Plan = Sollzahl, Extern = " +
+        "von außerhalb angerechnete Abschüsse, &bdquo;Zählt als&ldquo; = optional " +
+        "mehrere Klassen zu einer Zeile zusammenfassen (Komma-getrennt)."
+    },
+    {
+      adminOnly: true,
+      icon: "☠", title: "Fallwild markieren",
+      content:
+        "Im Edit-Dialog eines Eintrags gibt es eine Checkbox &bdquo;als " +
+        "Fallwild markieren&ldquo;. Fallwild wird NICHT im Plan gezählt, aber " +
+        "separat in den Stats und im Monats-Chart angezeigt."
+    },
+    {
+      adminOnly: true,
+      icon: "🖨", title: "Drucken / PDF + CSV-Export",
+      content:
+        "Im Admin → Export wählst du Bereich (Revier/Park) und Jahr. " +
+        "<b>🖨 Drucken / PDF</b> erstellt eine A4-Liste für die amtliche " +
+        "Meldung. <b>📊 CSV/Excel</b> liefert eine CSV-Datei zum Öffnen " +
+        "in Excel."
+    },
+    {
+      adminOnly: true,
+      icon: "💾", title: "Backup & Restore",
+      content:
+        "Im Admin → Export → &bdquo;Backup der Datenbank&ldquo;. Das Backup ist ein " +
+        "JSON-Dump (ohne Passwörter). Beim Einspielen werden alle Daten " +
+        "überschrieben – vorher also immer ein aktuelles Backup machen."
+    },
+    {
+      adminOnly: true,
+      icon: "⚙️", title: "Einstellungen",
+      content:
+        "Im Admin → Allgemein kannst du Reviername, Zahlencode, " +
+        "Abfall-Hinweistext, Sichtbarkeit von Plan/Park-Button und " +
+        "kompakte vs. detaillierte Kartenansicht einstellen. Die " +
+        "Einstellungen liegen in der Datenbank und gelten für alle Geräte."
+    },
+  ];
+
+  // Filtern nach Admin-Status und Konfig
+  const visibleSections = sections.filter(s => {
+    if (s.adminOnly && !isAdmin) return false;
+    if (typeof s.show === "function" && !s.show()) return false;
+    return true;
+  });
+
+  const modusInfo = isAdmin
+    ? '<span style="background:#e8f5e9;color:#1b5e20;padding:2px 8px;border-radius:12px;font-size:11px;">Admin-Ansicht</span>'
+    : '<span style="background:#e3f2fd;color:#0d47a1;padding:2px 8px;border-radius:12px;font-size:11px;">Benutzer-Ansicht</span>';
+
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h3 style="margin:0;">❓ Hilfe</h3>
+      ${modusInfo}
+    </div>
+    <p class="hint" style="margin-bottom:10px;">
+      Tippe auf einen Abschnitt, um ihn aufzuklappen.
+    </p>
+    <div class="help-sections">`;
+
+  visibleSections.forEach(s => {
+    html += `
+      <details class="help-section">
+        <summary>${s.icon} <b>${esc(s.title)}</b></summary>
+        <div class="help-body">${s.content}</div>
+      </details>`;
+  });
+ html += `
+    </div>
+    <div style="margin-top:14px;text-align:right;">
+      <button id="helpCloseBtn">Schließen</button>
+    </div>`;
+
+  box.innerHTML = html;
+  box.querySelector("#helpCloseBtn").onclick = () => { ov.remove(); box.remove(); };
+  document.body.appendChild(ov);
+  document.body.appendChild(box);
+}
+
+async function openPlanPopup() {
+  try {
+    await ensurePlan(selectedYear);
+  } catch (err) {
+    console.error('[Plan] ensurePlan fehlgeschlagen:', err);
+  }
+  // Popup zeigt das gewählte Jahr vollständig, im aktuellen appMode.
+  const isPark = (appMode === "park");
+  const fullYear = daten.filter(d =>
+    d.datum &&
+    new Date(d.datum).getFullYear() === selectedYear &&
+    (!!d.ist_park === isPark)
+  );
+  try {
+    document.getElementById("planPopupYear").textContent =
+      "· " + (isPark ? "🌲 Park" : "🎯 Revier") + " · Jagdjahr " + selectedYear;
+    document.getElementById("planPopupBody").innerHTML =
+      renderMonthChart(fullYear, selectedYear) +
+      renderPlanIstTabelle(fullYear, selectedYear);
+  } catch (err) {
+    console.error('[Plan] Popup-Rendering fehlgeschlagen:', err);
+    document.getElementById("planPopupBody").innerHTML =
+      '<p class="hint">Fehler beim Laden: ' + esc(err.message || String(err)) + '</p>';
+  }
+  document.getElementById("planOverlay").style.display = "block";
+  document.getElementById("planPopup").style.display = "block";
+}
+
+/* Jahres-Balkendiagramm: Anzahl Einträge pro Monat, gestapelt nach Wildart */
+function renderMonthChart(entries, year) {
+  const MONATE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+  const isPark = (appMode === "park");
+  // Bekannte Wildarten / Klassen mit festen Farben.
+  // Im Park-Modus gruppieren wir nach Klasse (T-Hirsch ...), daher
+  // brauchen wir die Klassen-Farben auch hier. Konsistent mit den
+  // Karten-Markern.
+  const FARBEN = {
+    // Revier-Wildarten
+    "Rehwild":    "#FFD600",
+    "Rotwild":    "#E53935",
+    "Gamswild":   "#424242",
+    "Fuchs":      "#FF6D00",
+    "Hase":       "#795548",
+    "Schwarzwild":"#6D4C41",
+    "Murmeltier": "#00897B",
+    "Steinbock":  "#8BC34A",
+    // Park-Klassen (Rotwild)
+    "T-Hirsch":   "#8E0000",
+    "J-Hirsch":   "#FF6D00",
+    "Tier":       "#E91E63",
+    "Schmaltier": "#AB47BC",
+    "Kalb":       "#FFEB3B",
+    // Sonstige
+    "Fallwild":   "#9C27B0",   // Fallwild als eigene Kategorie
+    "Andere":     "#1E88E5",
+  };
+  // Fallback-Palette für unbekannte custom Wildarten -
+  // deterministisch aus dem Namen abgeleitet, damit gleiche Namen
+  // immer dieselbe Farbe bekommen.
+  const PALETTE = ["#00ACC1","#7CB342","#F9A825","#8E24AA","#5E35B1",
+                   "#FB8C00","#D81B60","#43A047","#3949AB","#E53935"];
+  function colorFor(art) {
+    if (FARBEN[art]) return FARBEN[art];
+    // Einfacher String-Hash, um den Namen auf einen Paletten-Index zu mappen
+    let hash = 0;
+    for (let i = 0; i < art.length; i++) hash = (hash * 31 + art.charCodeAt(i)) >>> 0;
+    return PALETTE[hash % PALETTE.length];
+  }
+
+  // Pro Monat pro Kategorie zählen. Fallwild ist eine eigene
+  // Kategorie, damit es im Chart unterscheidbar ist. Im Park-Modus
+  // wird nach Klasse (T-Hirsch, J-Hirsch, ...) gruppiert, im Revier
+  // nach Wildart.
+  const months = Array.from({length: 12}, () => ({}));
+  entries.forEach(d => {
+    const m = new Date(d.datum).getMonth();
+    let a;
+    if (d.ist_fallwild) {
+      a = "Fallwild";
+    } else if (isPark) {
+      a = d.wild || "–";
+    } else {
+      a = d.wildart || "Andere";
+    }
+    months[m][a] = (months[m][a] || 0) + 1;
+  });
+  const totals = months.map(m => Object.values(m).reduce((s,n) => s+n, 0));
+  const maxTotal = Math.max(1, ...totals);
+  const W = 380, H = 120, padL = 20, padB = 18, barW = (W - padL) / 12;
+
+  let html = '<div style="margin:0 0 12px;"><h4 style="margin:0 0 6px;">📈 Abschüsse pro Monat ' + year + '</h4>';
+  html += '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;background:#fafafa;border-radius:6px;">';
+
+  // Y-Gridlinien
+  for (let i = 1; i <= 4; i++) {
+    const y = (H - padB) * (1 - i/4);
+    html += `<line x1="${padL}" y1="${y}" x2="${W}" y2="${y}" stroke="#e0e0e0" stroke-width="1"/>`;
+  }
+
+  months.forEach((m, mi) => {
+    const x = padL + mi * barW + 2;
+    const total = totals[mi];
+    if (!total) {
+      html += `<text x="${x + (barW-4)/2}" y="${H - padB + 12}" font-size="9" text-anchor="middle" fill="#999">${MONATE[mi]}</text>`;
+      return;
+    }
+    let yStack = H - padB;
+    Object.keys(m).sort().forEach(art => {
+      const h = (m[art] / maxTotal) * (H - padB);
+      yStack -= h;
+      const col = colorFor(art);
+      html += `<rect x="${x}" y="${yStack}" width="${barW - 4}" height="${h}" fill="${col}">
+                 <title>${esc(art)}: ${m[art]}</title>
+               </rect>`;
+    });
+    // Summen-Label über dem Balken
+    html += `<text x="${x + (barW-4)/2}" y="${H - padB - (total/maxTotal)*(H-padB) - 2}"
+             font-size="9" text-anchor="middle" fill="#333" font-weight="bold">${total}</text>`;
+    html += `<text x="${x + (barW-4)/2}" y="${H - padB + 12}" font-size="9" text-anchor="middle" fill="#555">${MONATE[mi]}</text>`;
+  });
+
+  html += '</svg>';
+
+  // Legende zeigt alle tatsächlich vorkommenden Kategorien (inkl. Fallwild).
+  // Dieselbe Gruppierung wie im Chart: Park -> nach Klasse, Revier -> nach Wildart
+  const wildarten = new Set();
+  entries.forEach(d => {
+    if (d.ist_fallwild) {
+      wildarten.add("Fallwild");
+    } else if (isPark) {
+      wildarten.add(d.wild || "–");
+    } else {
+      wildarten.add(d.wildart || "Andere");
+    }
+  });
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-top:4px;">';
+  [...wildarten].sort().forEach(a => {
+    const col = colorFor(a);
+    html += `<span style="display:inline-flex;align-items:center;gap:4px;">
+               <i style="display:inline-block;width:10px;height:10px;background:${col};border-radius:2px;"></i>${esc(a)}
+             </span>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function closePlanPopup() {
+  document.getElementById("planOverlay").style.display = "none";
+  document.getElementById("planPopup").style.display = "none";
+}
+
+/* Plan vs. Ist vs. Rest – wird vom Popup aufgerufen */
+function renderPlanIstTabelle(fd, year) {
+  try {
+    const plan = getPlan(year) || {};
+
+    // Pro Wildart Ist-Werte pro Wild-Klasse grob vorzählen.
+    // Fallwild wird NICHT im Plan gezählt – so gewollt.
+    const raw = {};
+    fd.forEach(d => {
+      if (d.ist_fallwild) return;  // Fallwild überspringen
+      const a = d.wildart || "";
+      if (!raw[a]) raw[a] = {};
+      const k = d.wild || "–";
+      raw[a][k] = (raw[a][k] || 0) + 1;
+    });
+
+    function istFor(art, klasse, matches) {
+      const bucket = raw[art] || {};
+      const keys = matches && matches.trim()
+        ? matches.split(",").map(s => s.trim()).filter(Boolean)
+        : [klasse];
+      let sum = 0;
+      keys.forEach(k => { sum += (bucket[k] || 0); });
+      return sum;
+    }
+
+    // Helper: nimmt Wert in alter (int) oder neuer (object) Form
+    function rowValues(v) {
+      if (typeof v === "number") return { plan: v, extern: 0, enabled: true, matches: "" };
+      if (!v || typeof v !== "object") return { plan: 0, extern: 0, enabled: true, matches: "" };
+      return {
+        plan:    parseInt(v.plan,   10) || 0,
+        extern:  parseInt(v.extern, 10) || 0,
+        enabled: v.enabled !== false,
+        matches: (v.matches || "").toString(),
+      };
+    }
+
+    let html = '<div class="plan-ist-wrap"><h4>Abschussplan ' + year + '</h4>';
+    let anythingShown = false;
+    Object.keys(plan).forEach(art => {
+      const grp = plan[art] || {};
+      const enabledRows = Object.keys(grp).filter(k => rowValues(grp[k]).enabled);
+      if (!enabledRows.length) return;
+      anythingShown = true;
+      html += `<table class="plan-ist">
+        <tr><th colspan="5">${esc(art)}</th></tr>
+        <tr><th>Klasse</th><th>Plan</th><th>Ist</th><th>Ext.</th><th>Rest</th></tr>`;
+      let sP = 0, sI = 0, sX = 0;
+      enabledRows.forEach(k => {
+        const rv = rowValues(grp[k]);
+        const p = rv.plan;
+        const iv = istFor(art, k, rv.matches);
+        const ext = rv.extern;
+        const rest = p - iv - ext;
+        sP += p; sI += iv; sX += ext;
+        const cls = (rest < 0) ? ' class="over"' : '';
+        html += `<tr${cls}><td>${esc(k)}</td><td>${p}</td><td>${iv}</td><td>${ext}</td><td>${rest}</td></tr>`;
+      });
+      html += `<tr class="sum"><td>Summe</td><td>${sP}</td><td>${sI}</td><td>${sX}</td><td>${sP - sI - sX}</td></tr></table>`;
+    });
+    if (!anythingShown) {
+      html += '<p class="hint">Noch keine Klassen im Plan aktiv. Öffne das Admin-Panel → Abschussplan bearbeiten und hake mindestens eine Klasse an.</p>';
+    }
+    html += '</div>';
+    return html;
+  } catch (err) {
+    console.error('[Plan] renderPlanIstTabelle fehlgeschlagen:', err);
+    return '<div class="plan-ist-wrap"><h4>Fehler</h4><p class="hint">'
+         + esc(err.message || String(err)) + '</p></div>';
+  }
+}
+
+/* Plan-Editor im Admin-Panel */
+function fillPlanYears() {
+  const sel = document.getElementById("planYear");
+  if (!sel) return;
+  sel.innerHTML = "";
+  const years = new Set(getYears());
+  Object.keys(abschussplan).forEach(y => years.add(parseInt(y, 10)));
+  years.add(new Date().getFullYear());
+  [...years].sort((a,b) => b - a).forEach(y => {
+    const o = document.createElement("option");
+    o.value = y; o.textContent = y;
+    sel.appendChild(o);
+  });
+  sel.value = selectedYear;
+  renderPlan();
+}
+
+async function renderPlan() {
+  const y = parseInt(document.getElementById("planYear").value, 10);
+  const kontext = document.getElementById("planKontext").value || "revier";
+  await ensurePlan(y, kontext);
+  const plan = getPlan(y, kontext);
+
+  const kontextLabel = kontext === "park" ? "🌲 Park" : "🎯 Revier";
+  let html = '<p class="hint">Bereich: <b>' + kontextLabel + '</b><br>✓ = wird im Plan gezählt.<br>'
+           + '&bdquo;Zählt als&ldquo; ist optional und fasst mehrere Wild-Klassen zu einer Zeile zusammen.<br>'
+           + 'Mehrere durch <b>Komma</b> trennen, z.B.: <code>T-Hirsch,J-Hirsch</code> ergibt eine Zeile „Männlich".<br>'
+           + 'Leer lassen heißt: nur Einträge mit genau diesem Klassennamen werden gezählt.</p>';
+
+  Object.keys(plan).forEach(art => {
+    html += `<div class="plan-group">
+      <h5>${esc(art)} <button class="sm sec" onclick="planAddRow(this,'${esc(art)}')">+ Klasse</button></h5>
+      <table class="plan-edit">
+        <tr><th>✓</th><th>Klasse</th><th>Plan</th><th>Extern</th><th>Zählt als</th><th></th></tr>`;
+    Object.keys(plan[art]).forEach(k => {
+      const row = plan[art][k];
+      html += planEditorRow(art, k, row);
+    });
+    html += `</table></div>`;
+  });
+
+  html += `<div style="margin-top:8px;">
+    <button class="sm sec" onclick="planAddGroup()">+ neue Wildart</button>
+  </div>`;
+
+  document.getElementById("planEditor").innerHTML = html;
+}
+
+function planEditorRow(art, klasse, row) {
+  const checked = row && row.enabled !== false ? "checked" : "";
+  const planVal = row ? (row.plan   || 0) : 0;
+  const extVal  = row ? (row.extern || 0) : 0;
+  const matches = row ? (row.matches || "") : "";
+  return `<tr data-art="${esc(art)}">
+    <td><input type="checkbox" ${checked} class="pe-en"></td>
+    <td><input type="text" class="pe-k"  value="${esc(klasse)}" style="width:110px;padding:4px;"></td>
+    <td><input type="number" class="pe-p" min="0" value="${planVal}" style="width:60px;padding:4px;"></td>
+    <td><input type="number" class="pe-x" min="0" value="${extVal}"  style="width:60px;padding:4px;"
+         title="Extern erlegte Tiere (werden vom Plan abgezogen, aber nicht als Ist gezählt)"></td>
+    <td><input type="text" class="pe-m" value="${esc(matches)}"
+         placeholder="z.B. T-Hirsch,J-Hirsch" style="width:160px;padding:4px;"
+         title="Mehrere Wild-Klassen mit Komma trennen, z.B. T-Hirsch,J-Hirsch"></td>
+    <td><button class="sm" style="background:#c62828;padding:2px 6px;" onclick="this.closest('tr').remove()">✕</button></td>
+  </tr>`;
+}
+
+function planAddRow(btn, art) {
+  const group = btn.closest('.plan-group');
+  const table = group.querySelector('table');
+  const tr = document.createElement('tr');
+  tr.dataset.art = art;
+  tr.innerHTML = planEditorRow(art, "", { plan: 0, enabled: true, matches: "" })
+    .replace(/^<tr[^>]*>|<\/tr>$/g, '');
+  table.appendChild(tr);
+  tr.querySelector('.pe-k').focus();
+}
+
+function planAddGroup() {
+  const name = (prompt("Name der neuen Wildart (z.B. 'Schwarzwild'):") || "").trim();
+  if (!name) return;
+  const editor = document.getElementById("planEditor");
+  const div = document.createElement('div');
+  div.className = 'plan-group';
+  div.innerHTML = `
+    <h5>${esc(name)} <button class="sm sec" onclick="planAddRow(this,'${esc(name)}')">+ Klasse</button></h5>
+    <table class="plan-edit">
+      <tr><th>✓</th><th>Klasse</th><th>Plan</th><th>Zählt als (optional)</th><th></th></tr>
+    </table>`;
+  editor.appendChild(div);
+}
+
+async function savePlan() {
+  const y = parseInt(document.getElementById("planYear").value, 10);
+  const kontext = document.getElementById("planKontext").value || "revier";
+  // Plan aus den Feldern rekonstruieren. Die Wildart steht pro Zeile in
+  // data-art, der Klassenname ist das <input.pe-k>-Feld (damit man Klassen
+  // umbenennen oder neu anlegen kann).
+  const plan = {};
+  document.querySelectorAll("#planEditor tr[data-art]").forEach(tr => {
+    const art = tr.dataset.art;
+    const kls = tr.querySelector(".pe-k").value.trim();
+    if (!kls) return;  // leere Zeilen ignorieren
+    const cfg = {
+      plan:    parseInt(tr.querySelector(".pe-p").value, 10) || 0,
+      extern:  parseInt(tr.querySelector(".pe-x").value, 10) || 0,
+      enabled: tr.querySelector(".pe-en").checked,
+      matches: tr.querySelector(".pe-m").value.trim(),
+    };
+    if (!plan[art]) plan[art] = {};
+    plan[art][kls] = cfg;
+  });
+  try {
+    await api.savePlan(y, plan, kontext);
+    abschussplan[kontext + ":" + y] = normalizePlan(plan, kontext);
+    anzeigen();
+    toast("✓ Abschussplan gespeichert");
+  } catch (err) {
+    alert("Speichern fehlgeschlagen: " + err.message);
+  }
+}
+
+/* ---------- Meldeliste (gemeldet markieren) ---------- */
+function fillMeldYears() {
+  const sel = document.getElementById("meldYear");
+  if (!sel) return;
+  sel.innerHTML = "";
+  getYears().forEach(y => {
+    const o = document.createElement("option");
+    o.value = y; o.textContent = y;
+    sel.appendChild(o);
+  });
+  sel.value = selectedYear;
+  renderMeldListe();
+}
+
+function renderMeldListe() {
+  const y = parseInt(document.getElementById("meldYear").value, 10);
+  const box = document.getElementById("meldListe");
+  const rows = daten.filter(d => d.datum && new Date(d.datum).getFullYear() === y);
+  if (!rows.length) {
+    box.innerHTML = '<p class="hint">Keine Einträge in diesem Jahr.</p>';
+    return;
+  }
+  let html = '<table class="meld-table">';
+  rows.forEach(d => {
+    const label = `${formatDatum(d.datum)} · ${esc(d.name||"")} · ${esc(d.wildart||"")} ${esc(d.wild||"")}`.trim();
+    const status = d.gemeldet
+      ? '<span style="color:#c62828;">🔒 gemeldet</span>'
+      : '<span style="color:#2e7d32;">offen</span>';
+    const btnLabel = d.gemeldet ? "Entsperren" : "Sperren";
+    const btnCls = d.gemeldet ? "sm sec" : "sm";
+    html += `<tr>
+      <td>${label}</td>
+      <td>${status}</td>
+      <td><button class="${btnCls}" onclick="toggleGemeldet(${d.id})">${btnLabel}</button></td>
+    </tr>`;
+  });
+  html += '</table>';
+  box.innerHTML = html;
+}
+
+async function toggleGemeldet(id) {
+  id = Number(id);
+  const d = daten.find(x => Number(x.id) === id);
+  if (!d) { alert("Eintrag #" + id + " nicht gefunden."); return; }
+  try {
+    // Server erwartet truthy/falsy; explizit als 1/0 schicken, damit
+    // es unabhängig vom Wahrheitswert eindeutig ist.
+    const neu = d.gemeldet ? 0 : 1;
+    const row = await api.eintragAction(id, 'gemeldet', neu);
+    applyRow(row);
+    renderMeldListe();
+    anzeigen();
+  } catch (err) {
+    if (String(err.message).includes('Nicht eingeloggt') ||
+        String(err.message).includes('Nur für Admin')) {
+      alert("Admin-Session abgelaufen. Bitte oben rechts neu einloggen.");
+      isAdmin = false;
+      applyConfig();
+      zeigeSeite('admin-login');
+    } else {
+      alert("Speichern fehlgeschlagen: " + err.message);
+    }
+  }
 }
 
 /* ---------- Workflow ---------- */
 function neuerEintrag() {
   e = {}; aktuellerPunkt = null;
+  // appMode merken, damit der Eintrag automatisch in Park bzw. Revier
+  // gespeichert wird
+  e.ist_park = (appMode === "park");
+  if (e.ist_park) {
+    // Im Park gibt es nur Rotwild – Wildart ist vordefiniert,
+    // die Klassen-Auswahl kommt direkt als nächster Schritt nach Name.
+    e.wildart = "Rotwild";
+  }
   document.getElementById("inputName").value = "";
   document.getElementById("andereInput").value = "";
+  const gsel = document.getElementById("inputGewicht");
+  if (gsel) gsel.value = "";
   document.getElementById("inputOrt").value = "";
   document.getElementById("andereOrtBox").style.display = "none";
   const now = new Date();
@@ -663,7 +2458,13 @@ function buildNameSugg() {
 function nextWild() {
   const v = document.getElementById("inputName").value.trim();
   if (!v) return alert("Bitte Name eingeben!");
-  e.name = v; zeigeSeite("wf-wild");
+  e.name = v;
+  if (e.ist_park) {
+    // Park: Wildart ist fix Rotwild, direkt zur Klassen-Auswahl
+    zeigeSeite("wf-hirsch");
+  } else {
+    zeigeSeite("wf-wild");
+  }
 }
 function setWild(w) {
   e.wildart = w; e.wild = "";
@@ -675,11 +2476,127 @@ function setAndere() {
   if (!v) return alert("Bitte Wildart eingeben!");
   e.wildart=v; e.wild=""; zeigeSeite("wf-gewicht");
 }
-function nextOrt() { e.gewicht = document.getElementById("inputGewicht").value; zeigeSeite("wf-ort"); }
+function nextOrt() {
+  const g = document.getElementById("inputGewicht").value;
+  if (g === "" || parseInt(g, 10) <= 0) {
+    toast("Bitte ein Gewicht auswählen oder \"Später eintragen\" tippen", "warn");
+    document.getElementById("inputGewicht").focus();
+    return;
+  }
+  e.gewicht = g;
+  zeigeSeite("wf-ort");
+}
+
+function skipGewicht() {
+  e.gewicht = null;   // explizit leer, wird später nachgetragen
+  zeigeSeite("wf-ort");
+}
+
+/* Erzeugt die HTML-Zelle für das Gewicht - entweder den Wert,
+   einen Strich oder den klickbaren "Gewicht eintragen"-Button. */
+function renderGewichtCell(d) {
+  if (d.gewicht != null && d.gewicht !== "") {
+    return d.gewicht + " kg";
+  }
+  // Leeres Gewicht: erlauben, einmalig nachzutragen, solange nicht gemeldet
+  if (d.gemeldet && !isAdmin) return "–";
+  return `<span class="tag-btn" style="background:#757575;color:#fff;cursor:pointer;"
+            onclick="event.stopPropagation();setGewichtLater(${d.id})">
+            + kg
+          </span>`;
+}
+
+/* Setzt nachträglich das Gewicht. Für nicht-Admins nur einmalig,
+   solange d.gewicht noch leer ist. Admin kann es ohnehin über den
+   Edit-Dialog ändern. */
+async function setGewichtLater(id) {
+  id = Number(id);
+  const d = daten.find(x => Number(x.id) === id);
+  if (!d) { alert("Eintrag nicht gefunden"); return; }
+  if (d.gewicht != null && d.gewicht !== "" && !isAdmin) {
+    alert("Gewicht ist bereits eingetragen und kann nicht mehr geändert werden.");
+    return;
+  }
+  if (d.gemeldet && !isAdmin) {
+    alert("Eintrag ist gemeldet, das Gewicht kann nicht mehr geändert werden.");
+    return;
+  }
+  const input = prompt("Gewicht in kg eingeben:", "");
+  if (input == null) return;
+  const g = parseInt(input, 10);
+  if (isNaN(g) || g <= 0 || g > 500) {
+    alert("Bitte eine Zahl zwischen 1 und 500 eingeben.");
+    return;
+  }
+  try {
+    // Eigenständige Sub-Action: funktioniert auch ohne Admin, solange das
+    // Gewicht noch leer ist und der Eintrag nicht gemeldet ist.
+    const row = await api.eintragAction(id, 'gewicht', g);
+    applyRow(row);
+    anzeigen();
+    toast("✓ Gewicht eingetragen: " + g + " kg");
+  } catch (err) {
+    alert("Speichern fehlgeschlagen: " + err.message);
+  }
+}
 function setOrt(o) { o==="Prad" ? openMap("input") : (e.ort=o, zeigeSeite("wf-zeit")); }
+
+/* Direkter GPS-Abschuss-Ort: ohne Karte, nimm den aktuellen Standort */
+function useHereAsLocation() {
+  if (!navigator.geolocation) {
+    alert("Standort wird vom Browser nicht unterstützt. Bitte Karte benutzen.");
+    return;
+  }
+  // Feedback, während auf GPS gewartet wird
+  const hint = document.createElement("div");
+  hint.textContent = "📡 Standort wird ermittelt…";
+  hint.style.cssText = "margin-top:8px;padding:10px;background:#e3f2fd;border-radius:8px;color:#1565c0;";
+  document.querySelector("#wf-ort").appendChild(hint);
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      hint.remove();
+      e.latlng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      e.ort = "Prad";
+      zeigeSeite("wf-zeit");
+    },
+    err => {
+      hint.remove();
+      alert("Standort nicht verfügbar: " + err.message +
+            "\nBitte stattdessen Karte öffnen oder Ort manuell eingeben.");
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
 function zeigeAndereOrt() {
   document.getElementById("andereOrtBox").style.display="block";
   document.getElementById("inputOrt").focus();
+  buildOrtSuggestions();
+}
+
+function buildOrtSuggestions() {
+  // Schon verwendete Orte als Vorschläge sammeln (ohne "Prad", weil das
+  // den Sonderfall Kartenklick hat).
+  const orte = [...new Set(daten.map(d => d.ort).filter(o => o && o !== "Prad"))];
+  const dl = document.getElementById("ortSuggestions");
+  if (dl) {
+    dl.innerHTML = orte.map(o => `<option value="${esc(o)}">`).join("");
+  }
+  // Zusätzlich: die letzten 5 meistgenutzten als Quick-Buttons
+  const freq = {};
+  daten.forEach(d => { if (d.ort && d.ort !== "Prad") freq[d.ort] = (freq[d.ort]||0) + 1; });
+  const top = Object.keys(freq).sort((a,b) => freq[b] - freq[a]).slice(0, 5);
+  const bbox = document.getElementById("ortSuggButtons");
+  if (bbox) {
+    bbox.innerHTML = top.map(o =>
+      `<button class="sm sec" style="margin:2px;" onclick="pickOrt('${esc(o).replace(/'/g,"\\'")}')">${esc(o)}</button>`
+    ).join("");
+  }
+}
+
+function pickOrt(o) {
+  document.getElementById("inputOrt").value = o;
+  setAndereOrt();
 }
 function setAndereOrt() {
   const v = document.getElementById("inputOrt").value.trim();
@@ -711,7 +2628,7 @@ function showSummary() {
     ["Wildart", e.wildart + (e.wild ? " – "+e.wild : "")],
     ["Gewicht", e.gewicht ? e.gewicht+" kg" : "–"],
     ["Ort", e.ort || "–"],
-    ["Karte", e.koord ? "✓ Markiert" : "–"],
+    ["Karte", e.latlng ? "✓ Markiert" : "–"],
     ["Schusszeit", e.zeit || "–"],
     ["Datum", formatDatum(e.datum)],
     ["Verwendung", e.verwendung || "–"],
@@ -722,59 +2639,436 @@ function showSummary() {
 }
 
 function editFromSummary() {
-  document.getElementById("inputName").value = e.name||"";
+  // Alle Workflow-Felder aus dem aktuellen Eintrag vorausfüllen,
+  // damit der User wirklich editieren und nicht neu anfangen muss.
+  document.getElementById("inputName").value   = e.name   || "";
+  document.getElementById("andereInput").value = "";
+  document.getElementById("inputGewicht").value = (e.gewicht != null ? e.gewicht : "");
+  document.getElementById("inputOrt").value    = (e.ort && e.ort !== "Prad") ? e.ort : "";
+  document.getElementById("inputZeit").value   = e.zeit   || "";
+  document.getElementById("inputDatum").value  = e.datum  || "";
+  document.getElementById("andereOrtBox").style.display = "none";
   zeigeSeite("wf-name");
 }
 
-function finishSave() {
-  e.entnommen = ""; e.abfall = null;
-  daten.push(e);
-  speichern();
-  if (e.datum) selectedYear = new Date(e.datum).getFullYear();
-  updateYearTabs(); anzeigen();
-  e = {}; aktuellerPunkt = null;
-  zeigeSeite("revier");
+async function finishSave() {
+  e.entnommen = null;
+  e.abfall = null;
+  e.gemeldet = false;
+  const body = clientToDb(e);
+  try {
+    // Wenn offline: direkt in Outbox, ohne API-Versuch
+    if (!navigator.onLine) {
+      queueEntry(body);
+      alert("📴 Offline gespeichert.\nEintrag wird hochgeladen, sobald wieder Internet da ist.");
+      if (e.datum) selectedYear = new Date(e.datum).getFullYear();
+      updateYearTabs();
+      anzeigen();
+      e = {}; aktuellerPunkt = null;
+      zeigeSeite("revier");
+      return;
+    }
+    const row = await api.createEintrag(body);
+    applyRow(row);
+    if (row.datum) selectedYear = new Date(row.datum).getFullYear();
+    await ensurePlan(selectedYear);
+    updateYearTabs();
+    anzeigen();
+    // Wetter im Hintergrund nachladen (falls wir GPS haben)
+    fetchWetterForEntry(row.id).catch(() => {});
+    e = {};
+    aktuellerPunkt = null;
+    zeigeSeite("revier");
+  } catch (err) {
+    // Server nicht erreichbar obwohl online? Queue stattdessen.
+    queueEntry(body);
+    alert("⚠ Server antwortet nicht — Eintrag wurde offline gespeichert und wird nachgereicht.");
+    updateYearTabs();
+    anzeigen();
+    e = {}; aktuellerPunkt = null;
+    zeigeSeite("revier");
+  }
 }
 
-/* ---------- Karte ---------- */
-function openMap(mode, index) {
-  mapMode = mode; viewIndex = index ?? null;
+/* ---------- Gemeldet-Sperre ---------- */
+function istGesperrt(id) {
+  id = Number(id);
+  const d = daten.find(x => Number(x.id) === id);
+  return d && d.gemeldet === true && !isAdmin;
+}
+function alertGesperrt() {
+  alert("Dieser Eintrag ist als gemeldet gesperrt.\nNur der Admin kann ihn ändern.");
+}
+
+/* Gemeinsamer Helper: Eintrag nach API-Antwort im lokalen Array ersetzen */
+function applyRow(row) {
+  const mapped = dbToClient(row);
+  const idx = findById(mapped.id);
+  if (idx >= 0) daten[idx] = mapped;
+  else daten.push(mapped);
+  return mapped;
+}
+
+/* ============================================================
+   KARTE (Leaflet + OpenStreetMap)
+   Default-Ansicht: Gemeindegebiet Prad am Stilfserjoch
+   ============================================================ */
+
+// Zentrum Prad, Default-Zoom (etwa Gemeindegebiet)
+const PRAD_CENTER = [46.6175, 10.5942];
+const PRAD_ZOOM   = 13;
+
+let leafletMap = null;
+let leafletClickHandler = null;
+let leafletTempMarker = null;  // der temporäre Klick-Marker beim Eintragen
+let leafletEntryLayer = null;  // Layer für alle Eintrags-Marker
+
+function ensureLeaflet() {
+  if (leafletMap) return leafletMap;
+  leafletMap = L.map('mapContainer', {
+    center: PRAD_CENTER,
+    zoom: PRAD_ZOOM,
+    zoomControl: true,
+    attributionControl: true,
+  });
+
+  // Zwei Tile-Schichten: Straßenkarte (OSM) und Satellit (Esri World Imagery)
+  const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap-Mitwirkende'
+  });
+  const satLayer = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxZoom: 19,
+      attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics'
+    }
+  );
+  // Zusätzlich: Labels-Overlay, das über dem Satellit Ortsnamen zeigt
+  const labelsLayer = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    { maxZoom: 19, pane: 'overlayPane' }
+  );
+
+  // Default: Satellit mit Beschriftung (besser für Jagdgelände)
+  satLayer.addTo(leafletMap);
+  labelsLayer.addTo(leafletMap);
+
+  // Layer-Switcher oben rechts
+  L.control.layers(
+    {
+      "🛰 Satellit": satLayer,
+      "🗺 Straßenkarte": osmLayer,
+    },
+    { "Beschriftung": labelsLayer },
+    { position: 'topright', collapsed: true }
+  ).addTo(leafletMap);
+
+  // Wenn auf OSM umgeschaltet wird, Labels-Overlay ausblenden
+  // (OSM hat die Beschriftung schon eingebacken).
+  leafletMap.on('baselayerchange', ev => {
+    if (ev.layer === osmLayer) {
+      if (leafletMap.hasLayer(labelsLayer)) leafletMap.removeLayer(labelsLayer);
+    } else {
+      if (!leafletMap.hasLayer(labelsLayer)) labelsLayer.addTo(leafletMap);
+    }
+  });
+
+  leafletEntryLayer = L.layerGroup().addTo(leafletMap);
+
+  leafletClickHandler = function (ev) {
+    if (mapMode !== 'input' && mapMode !== 'edit') return;
+    aktuellerPunkt = { lat: ev.latlng.lat, lng: ev.latlng.lng };
+    if (leafletTempMarker) leafletTempMarker.remove();
+    // Icon: im edit-Modus nach dem bearbeiteten Eintrag richten,
+    // im input-Modus nach dem aktuell in Bearbeitung befindlichen e.
+    let ico;
+    if (mapMode === 'edit') {
+      const d = daten.find(x => Number(x.id) === Number(editLocationId));
+      ico = makeDivIcon(d && d.wildart, d && d.wild, d && !!d.ist_park);
+    } else {
+      ico = makeDivIcon(e.wildart, e.wild, !!e.ist_park);
+    }
+    leafletTempMarker = L.marker(ev.latlng, { icon: ico }).addTo(leafletMap);
+  };
+  leafletMap.on('click', leafletClickHandler);
+  return leafletMap;
+}
+
+function wildartClass(w) {
+  if (w === 'Rehwild')  return 'reh';
+  if (w === 'Rotwild')  return 'rot';
+  if (w === 'Gamswild') return 'gams';
+  if (w === 'Fuchs' || w === 'Hase') return 'fox';
+  return '';
+}
+
+/* Im Park-Modus färben wir nach Klasse (T-Hirsch, J-Hirsch, Tier, ...),
+   weil alle Einträge ohnehin Rotwild sind. */
+function parkKlasseClass(wild) {
+  if (wild === 'T-Hirsch')   return 'park-thirsch';
+  if (wild === 'J-Hirsch')   return 'park-jhirsch';
+  if (wild === 'Tier')       return 'park-tier';
+  if (wild === 'Schmaltier') return 'park-schmaltier';
+  if (wild === 'Kalb')       return 'park-kalb';
+  return 'rot';
+}
+
+/* Legende unter der Karte dynamisch aufbauen - im Park werden
+   die Klassen-Farben gezeigt, im Revier die Wildart-Farben. */
+function renderMapLegend() {
+  const legend = document.getElementById("mapLegend");
+  if (!legend) return;
+  const isPark = (appMode === "park");
+  let items;
+  if (isPark) {
+    items = [
+      ["#8E0000", "T-Hirsch"],
+      ["#FF6D00", "J-Hirsch"],
+      ["#E91E63", "Tier"],
+      ["#AB47BC", "Schmaltier"],
+      ["#FFEB3B", "Kalb"],
+    ];
+  } else {
+    items = [
+      ["#FFD600", "Reh"],
+      ["#E53935", "Rot"],
+      ["#424242", "Gams"],
+      ["#FF6D00", "Fuchs/Hase"],
+      ["#1E88E5", "Sonst"],
+    ];
+  }
+  legend.innerHTML = items.map(
+    ([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`
+  ).join("");
+}
+
+function makeDivIcon(wildart, wild, isPark) {
+  const cls = isPark ? parkKlasseClass(wild) : wildartClass(wildart);
+  return L.divIcon({
+    className: '',
+    html: `<div class="wild-marker ${cls}"></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
+
+function clearMarkers() {
+  if (leafletEntryLayer) leafletEntryLayer.clearLayers();
+  if (leafletTempMarker) { leafletTempMarker.remove(); leafletTempMarker = null; }
+}
+
+function openMap(mode, idOrNull) {
+  mapMode = mode; viewIndex = idOrNull ?? null;
   document.getElementById("mapOverlay").style.display = "block";
   document.getElementById("mapPopup").style.display = "block";
-  document.getElementById("mapHint").style.display = mode==="input" ? "block" : "none";
+  document.getElementById("mapHint").style.display = mode === "input" ? "block" : "none";
+  renderMapLegend();
+
+  // Auf Mobile kann es einen Moment dauern, bis der Popup-Container
+  // seine endgültigen Dimensionen hat. Wir warten bis der Container
+  // eine messbare Größe hat und erzeugen die Karte erst dann.
+  waitForContainerSize("mapContainer", () => {
+    const map = ensureLeaflet();
+    map.invalidateSize(true);
+    // Nochmal nachinvalidieren, falls Layout nachwirkt
+    setTimeout(() => map.invalidateSize(true), 150);
+    setTimeout(() => map.invalidateSize(true), 450);
+    setupMapMarkers(mode);
+  });
+}
+
+/* Wartet, bis der Container-Div messbare Dimensionen hat,
+   dann ruft er cb() auf. Fallback nach 1s, damit es nie ewig hängt. */
+function waitForContainerSize(id, cb) {
+  const el = document.getElementById(id);
+  let tries = 0;
+  function check() {
+    const r = el ? el.getBoundingClientRect() : null;
+    if (r && r.width > 0 && r.height > 0) {
+      cb();
+      return;
+    }
+    if (tries++ > 20) { cb(); return; } // ~1s Fallback
+    requestAnimationFrame(check);
+  }
+  requestAnimationFrame(check);
+}
+
+function setupMapMarkers(mode) {
+  const map = leafletMap;
+  if (!map) return;
+  // Sicherheitshalber: Entry-Layer muss existieren und mit der Map verbunden sein
+  if (!leafletEntryLayer || !map.hasLayer(leafletEntryLayer)) {
+    leafletEntryLayer = L.layerGroup().addTo(map);
+  }
   clearMarkers();
-  if (mode==="input" && e.koord) drawMarker(e.koord.x, e.koord.y, e.wildart);
-  else if (mode==="view") getFiltered().forEach(d => { if (d.koord) drawMarker(d.koord.x, d.koord.y, d.wildart); });
-  else if (mode==="single") { const d=daten[viewIndex]; if (d&&d.koord) drawMarker(d.koord.x, d.koord.y, d.wildart); }
+
+  function validLL(ll) {
+    return ll && typeof ll.lat === 'number' && typeof ll.lng === 'number'
+      && !isNaN(ll.lat) && !isNaN(ll.lng)
+      && isFinite(ll.lat) && isFinite(ll.lng);
+  }
+
+  if (mode === "input") {
+    map.setView(PRAD_CENTER, PRAD_ZOOM);
+    if (validLL(e.latlng)) {
+      leafletTempMarker = L.marker(e.latlng, { icon: makeDivIcon(e.wildart, e.wild, !!e.ist_park) }).addTo(map);
+    }
+  } else if (mode === "view") {
+    const points = [];
+    const fd = getFiltered();
+    fd.forEach(d => {
+      if (validLL(d.latlng)) {
+        L.marker(d.latlng, { icon: makeDivIcon(d.wildart, d.wild, !!d.ist_park) })
+          .bindTooltip(`${d.name}: ${d.wildart} ${d.wild||''} (${formatDatum(d.datum)})`)
+          .addTo(leafletEntryLayer);
+        points.push([d.latlng.lat, d.latlng.lng]);
+      }
+    });
+    console.log('[Karte] view: ' + points.length + ' von ' + fd.length + ' Einträgen haben gültige Koordinaten.');
+    if (points.length) {
+      map.fitBounds(points, { padding: [20, 20], maxZoom: 16 });
+    } else {
+      map.setView(PRAD_CENTER, PRAD_ZOOM);
+    }
+  } else if (mode === "single") {
+    // Wir nutzen den beim Klick gestashten Eintrag (siehe openMapFromTable),
+    // fallback ist daten.find für den Fall, dass setupMapMarkers direkt
+    // mit einer id aufgerufen wird.
+    let d = singleViewEntry;
+    if (!d && viewIndex != null) {
+      d = daten.find(x => x.id === viewIndex)
+       || daten.find(x => String(x.id) === String(viewIndex));
+    }
+    console.log('[Karte] single setup: d=', d, 'validLL=', d && validLL(d.latlng));
+    if (d && validLL(d.latlng)) {
+      L.marker(d.latlng, { icon: makeDivIcon(d.wildart, d.wild, !!d.ist_park) })
+        .bindTooltip(`${d.name}: ${d.wildart} ${d.wild||''}`)
+        .addTo(leafletEntryLayer);
+      // setView muss MANCHMAL zweimal aufgerufen werden, weil Leaflet
+      // bei invalidateSize-Sequenzen die erste Anweisung verschluckt.
+      const ll = [d.latlng.lat, d.latlng.lng];
+      map.setView(ll, 15, { animate: false });
+      setTimeout(() => map.setView(ll, 15, { animate: false }), 250);
+    } else {
+      map.setView(PRAD_CENTER, PRAD_ZOOM);
+    }
+  } else if (mode === "edit") {
+    // Standort-Edit: aktuellen Marker des Eintrags vorladen,
+    // User kann einen neuen Punkt setzen.
+    const d = daten.find(x => Number(x.id) === Number(editLocationId));
+    if (d && validLL(d.latlng)) {
+      leafletTempMarker = L.marker(d.latlng, {
+        icon: makeDivIcon(d.wildart, d.wild, !!d.ist_park)
+      }).addTo(map);
+      map.setView([d.latlng.lat, d.latlng.lng], 15, { animate: false });
+      setTimeout(() => map.setView([d.latlng.lat, d.latlng.lng], 15, { animate: false }), 250);
+    } else {
+      map.setView(PRAD_CENTER, PRAD_ZOOM);
+    }
+  }
 }
 function openMapAll() { openMap("view"); }
-function openMapFromTable(ri) { openMap("single", ri); }
-function clearMarkers() { document.querySelectorAll("#mapContainer .marker").forEach(m=>m.remove()); }
+function openMapForEdit(id) {
+  if (!isAdmin) return alert("Nur der Admin kann den Standort ändern.");
+  editLocationId = Number(id);
+  // Edit-Dialog schließen (aber nicht zerstören), Karte öffnen
+  closePopups();
+  openMap("edit");
+}
+
+/* Speichert die neue Koordinate an den Eintrag und öffnet den
+   Edit-Dialog wieder, damit der Admin weiter bearbeiten kann. */
+async function saveLocationChange(id, latlng) {
+  try {
+    const body = {
+      koord_lat: latlng.lat,
+      koord_lng: latlng.lng,
+      ort: "Prad",
+    };
+    const row = await api.updateEintrag(id, body);
+    applyRow(row);
+    anzeigen();
+    toast("✓ Standort aktualisiert");
+    // Edit-Dialog wieder öffnen, falls der Admin weiter bearbeiten will
+    setTimeout(() => openEdit(id), 100);
+  } catch (err) {
+    alert("Speichern fehlgeschlagen: " + err.message);
+  }
+  }
+function openMapFromTable(id) {
+  id = Number(id);
+  singleViewEntry = daten.find(x => Number(x.id) === id) || null;
+  console.log('[Karte] openMapFromTable id=', id, 'typ=', typeof id,
+              'gefunden=', !!singleViewEntry,
+              'latlng=', singleViewEntry && singleViewEntry.latlng);
+  openMap("single", id);
+}
+
 function closeMap() {
   document.getElementById("mapOverlay").style.display = "none";
   document.getElementById("mapPopup").style.display = "none";
-  if (mapMode==="input") { if (aktuellerPunkt) e.koord=aktuellerPunkt; e.ort="Prad"; zeigeSeite("wf-zeit"); }
+  if (mapMode === "input") {
+    if (aktuellerPunkt) e.latlng = aktuellerPunkt;
+    e.ort = "Prad";
+    zeigeSeite("wf-zeit");
+  } else if (mapMode === "edit" && editLocationId != null) {
+    // Standort eines bestehenden Eintrags ändern: speichern per API
+    const newPt = aktuellerPunkt;
+    const idToSave = editLocationId;
+    editLocationId = null;
+    if (newPt) {
+      saveLocationChange(idToSave, newPt);
+    }
+  }
+  aktuellerPunkt = null;
+  // Map komplett zerstören, damit sie beim nächsten Öffnen frisch
+  // und mit korrekten Container-Dimensionen initialisiert wird.
+  // Das fixt vor allem mobile Probleme, wo invalidateSize() allein
+  // nicht reicht.
+  if (leafletMap) {
+    try { leafletMap.remove(); } catch (_) {}
+    leafletMap = null;
+    leafletEntryLayer = null;
+    leafletTempMarker = null;
+    leafletClickHandler = null;
+  }
 }
-function drawMarker(x,y,w) {
-  const c=document.getElementById("mapContainer"), m=document.createElement("div");
-  m.className="marker";
-  const cl={"Rehwild":"yellow","Rotwild":"red","Gamswild":"#888"};
-  m.style.background=cl[w]||"blue";
-  m.style.left=(x*100)+"%"; m.style.top=(y*100)+"%";
-  c.appendChild(m);
+
+/* Karten-Aktionen: Standort / Zentrieren */
+function mapCenterPrad() {
+  if (leafletMap) leafletMap.setView(PRAD_CENTER, PRAD_ZOOM);
 }
-document.getElementById("mapImage").addEventListener("click", function(ev) {
-  if (mapMode!=="input") return;
-  const r=this.getBoundingClientRect();
-  aktuellerPunkt = { x:(ev.clientX-r.left)/r.width, y:(ev.clientY-r.top)/r.height };
-  clearMarkers(); drawMarker(aktuellerPunkt.x, aktuellerPunkt.y, e.wildart);
-});
+function mapUseMyLocation() {
+  if (!navigator.geolocation) {
+    alert("Geolocation wird vom Browser nicht unterstützt.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const map = ensureLeaflet();
+      map.setView([lat, lng], 17);
+      if (mapMode === "input") {
+        aktuellerPunkt = { lat, lng };
+        if (leafletTempMarker) leafletTempMarker.remove();
+        leafletTempMarker = L.marker([lat, lng], { icon: makeDivIcon(e.wildart, e.wild, !!e.ist_park) }).addTo(map);
+      }
+    },
+    err => {
+      alert("Standort nicht verfügbar: " + err.message);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
 
 /* ============================================================
    ANZEIGE
    ============================================================ */
 function anzeigen() {
-  updateStats(); applyConfig();
+  updateStats(); applyConfig(); updateWildkammer();
   const fd = getFiltered();
 
   // Desktop
@@ -789,13 +3083,16 @@ function anzeigen() {
   fd.forEach((d,fi) => {
     const ri = realIdx(fi);
     const r = t.insertRow();
-    r.insertCell().innerText = d.name||"";
+    if (d.gemeldet) r.classList.add("row-gemeldet");
+    r.insertCell().innerText =
+      (d.gemeldet ? "🔒 " : "") + (d.ist_fallwild ? "☠ " : "") + (d.name||"");
     r.insertCell().innerText = d.wildart||"";
     r.insertCell().innerText = d.wild||"";
-    r.insertCell().innerText = d.gewicht||"";
+    const gewCell = r.insertCell();
+    gewCell.innerHTML = renderGewichtCell(d);
 
     const oc = r.insertCell();
-    if (d.ort==="Prad" && d.koord) oc.innerHTML = `<span class="link" onclick="openMapFromTable(${ri})">Prad 📍</span>`;
+    if (d.latlng) oc.innerHTML = `<span class="link" onclick="openMapFromTable(${ri})">${esc(d.ort||'Karte')} 📍</span>`;
     else oc.innerText = d.ort||"";
 
     r.insertCell().innerText = d.zeit||"";
@@ -827,44 +3124,57 @@ function anzeigen() {
     }
   });
 
-  // Mobile Cards
+  // Mobile Cards (kompakt oder detailliert, siehe config.cardsCompact)
+  const compact = config.cardsCompact !== false;  // Default: kompakt
   const cc = document.getElementById("cardsContainer");
   cc.innerHTML = "";
   fd.forEach((d,fi) => {
     const ri = realIdx(fi);
     const card = document.createElement("div");
-    card.className = "card";
-    const wt = d.wildart + (d.wild ? " – "+d.wild : "");
-    const ortH = (d.ort==="Prad"&&d.koord) ? `<span class="link" onclick="openMapFromTable(${ri})">Prad 📍</span>` : esc(d.ort||"");
+    card.className = "card" + (d.gemeldet ? " card-gemeldet" : "") + (compact ? " card-compact" : "");
+    card.dataset.id = ri;
+    const wt = (d.gemeldet ? "🔒 " : "") + (d.ist_fallwild ? "☠ " : "") + d.wildart + (d.wild ? " – "+d.wild : "");
+    const ortH = d.latlng
+      ? `<span class="link" onclick="event.stopPropagation();openMapFromTable(${ri})">${esc(d.ort||'Karte')} 📍</span>`
+      : esc(d.ort||"");
 
     let entH = !d.entnommen
-      ? `<span class="tag-btn tag-ent" onclick="pickDate(${ri})">+ Entnahme</span><input type="date" id="mdt${ri}" style="display:none;" onchange="setEntnommen(${ri},this.value)">`
+      ? `<span class="tag-btn tag-ent" onclick="event.stopPropagation();pickDate(${ri})">+ Entnahme</span><input type="date" id="mdt${ri}" style="display:none;" onchange="setEntnommen(${ri},this.value)">`
       : `<span class="tag-btn tag-done">${formatDatum(d.entnommen)}</span>`;
 
     let abfH = d.abfall==null
-      ? `<span class="tag-btn tag-abf" onclick="handleAbfall(${ri})">+ Abfall</span>`
+      ? `<span class="tag-btn tag-abf" onclick="event.stopPropagation();handleAbfall(${ri})">+ Abfall</span>`
       : d.abfall==="ja"
         ? `<span class="tag-btn tag-ja">Abfall: Ja</span>`
         : `<span class="tag-btn tag-nein">Abfall: Nein</span>`;
 
     let adminH = isAdmin
-      ? `<span class="tag-btn tag-edit" onclick="openEdit(${ri})">✏️</span> <span class="tag-btn tag-del" onclick="loeschen(${ri})">✕</span>`
+      ? `<span class="tag-btn tag-edit" onclick="event.stopPropagation();openEdit(${ri})">✏️</span> <span class="tag-btn tag-del" onclick="event.stopPropagation();loeschen(${ri})">✕</span>`
       : '';
 
+    // Kompakte Zeile: Name · Wildart · Datum, klickbar zum Aufklappen
     card.innerHTML = `
-      <div class="card-head">
-        <strong>${esc(wt)}</strong>
-        <span>${adminH}</span>
+      <div class="card-head" onclick="toggleCardExpand(this.parentElement)">
+        <div class="card-compact-line">
+          <strong>${esc(d.name||"")}</strong>
+          <span class="card-compact-wild">${esc(wt)}</span>
+          <span class="card-compact-date">${formatDatum(d.datum)}</span>
+          <span class="card-expand-chevron">▼</span>
+        </div>
       </div>
-      <div class="card-grid">
-        <div><span class="label">Erleger</span><br>${esc(d.name||"")}</div>
-        <div><span class="label">Gewicht</span><br>${d.gewicht ? d.gewicht+" kg" : "–"}</div>
-        <div><span class="label">Ort</span><br>${ortH}</div>
-        <div><span class="label">Zeit</span><br>${esc(d.zeit||"")}</div>
-        <div><span class="label">Datum</span><br>${formatDatum(d.datum)}</div>
-        <div><span class="label">Verwendung</span><br>${esc(d.verwendung||"–")}</div>
-      </div>
-      <div class="card-actions">${entH} ${abfH}</div>`;
+      <div class="card-body">
+        <div class="card-head-admin">${adminH}</div>
+        <div class="card-grid">
+          <div><span class="label">Erleger</span><br>${esc(d.name||"")}</div>
+          <div><span class="label">Gewicht</span><br>${renderGewichtCell(d)}</div>
+          <div><span class="label">Ort</span><br>${ortH}</div>
+          <div><span class="label">Zeit</span><br>${esc(d.zeit||"")}</div>
+          <div><span class="label">Datum</span><br>${formatDatum(d.datum)}</div>
+          <div><span class="label">Verwendung</span><br>${esc(d.verwendung||"–")}</div>
+        </div>
+        ${d.wetter ? `<div style="font-size:11px;color:var(--grau);margin-top:4px;">🌡️ ${esc(d.wetter)}</div>` : ''}
+        <div class="card-actions">${entH} ${abfH}</div>
+      </div>`;
     cc.appendChild(card);
   });
 
@@ -893,19 +3203,52 @@ function pickDate(i) {
   if (el.showPicker) el.showPicker();
   else { el.style.display="block"; el.focus(); }
 }
-function setEntnommen(i,val) { if (val) { daten[i].entnommen=val; speichern(); anzeigen(); } }
+async function setEntnommen(id, val) {
+  id = Number(id);
+  if (istGesperrt(id)) return alertGesperrt();
+  if (!val) return;
+  try {
+    const row = await api.eintragAction(id, 'entnommen', val);
+    applyRow(row);
+    anzeigen();
+  } catch (err) {
+    alert("Speichern fehlgeschlagen: " + err.message);
+  }
+}
 
-function handleAbfall(i) {
-  const ov = document.createElement("div"); ov.className="popup-overlay";
+function handleAbfall(id) {
+  id = Number(id);
+  if (istGesperrt(id)) return alertGesperrt();
+  const ov = document.createElement("div");
+  ov.style.cssText =
+    "position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:block;";
+  const box = document.createElement("div");
+  box.style.cssText =
+    "position:fixed;left:50%;top:30vh;transform:translateX(-50%);" +
+    "width:92%;max-width:360px;background:#fff;padding:16px;" +
+    "border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.35);" +
+    "z-index:1000;display:block;";
   ov.onclick = () => { ov.remove(); box.remove(); };
-  const box = document.createElement("div"); box.className="popup";
+  box.onclick = ev => ev.stopPropagation();
   box.innerHTML = `<h3>Abfall</h3>
     <p style="margin:10px 0;">${esc(config.abfallText)}</p>
-    <button onclick="setAbfall(${i},'ja')">✅ Ja</button>
-    <button class="danger" onclick="setAbfall(${i},'nein')">❌ Nein</button>`;
+    <div class="topbar">
+      <button onclick="setAbfall(${id},'ja')">✅ Ja</button>
+      <button class="danger" onclick="setAbfall(${id},'nein')">❌ Nein</button>
+    </div>`;
   document.body.appendChild(ov); document.body.appendChild(box);
 }
-function setAbfall(i,val) { daten[i].abfall=val; speichern(); anzeigen(); closePopups(); }
+async function setAbfall(id, val) {
+  id = Number(id);
+  try {
+    const row = await api.eintragAction(id, 'abfall', val);
+    applyRow(row);
+    anzeigen();
+    closePopups();
+  } catch (err) {
+    alert("Speichern fehlgeschlagen: " + err.message);
+  }
+}
 
 function closePopups() {
   document.querySelectorAll(".popup, .popup-overlay").forEach(el => {
@@ -914,23 +3257,60 @@ function closePopups() {
 }
 
 /* ---------- Löschen: NUR Admin ---------- */
-function loeschen(i) {
+async function loeschen(id) {
   if (!isAdmin) return alert("Nur der Admin kann Einträge löschen.");
-  if (!confirm("Eintrag wirklich löschen?")) return;
-  daten.splice(i,1); speichern(); updateYearTabs(); anzeigen();
+  id = Number(id);
+  const d = daten.find(x => Number(x.id) === id);
+  if (!d) { alert("Eintrag #" + id + " nicht gefunden."); return; }
+  if (d.gemeldet) {
+    if (!confirm("Dieser Eintrag ist als gemeldet markiert. Trotzdem löschen?")) return;
+  } else {
+    if (!confirm("Eintrag wirklich löschen?")) return;
+  }
+  try {
+    await api.deleteEintrag(id);
+    const idx = daten.findIndex(x => Number(x.id) === id);
+    if (idx >= 0) daten.splice(idx, 1);
+    updateYearTabs();
+    anzeigen();
+  } catch (err) {
+    alert("Löschen fehlgeschlagen: " + err.message);
+  }
 }
 
 /* ============================================================
    ADMIN: EINTRAG BEARBEITEN
    ============================================================ */
-function openEdit(i) {
-  if (!isAdmin) return;
-  const d = daten[i];
-  const abfV = (d.abfall==null) ? "" : d.abfall;
+function openEdit(id) {
+  if (!isAdmin) { alert("Nur der Admin kann Einträge bearbeiten."); return; }
+  id = Number(id);
+  const d = daten.find(x => Number(x.id) === id);
+  console.log('[Edit] openEdit id=', id, 'found=', !!d, 'daten-ids=', daten.map(x => x.id));
+  if (!d) { alert("Eintrag #" + id + " nicht gefunden."); return; }
+  const abfV = (d.abfall == null) ? "" : d.abfall;
 
-  const ov = document.createElement("div"); ov.className="popup-overlay";
+  const ov = document.createElement("div");
+  ov.className = "popup-overlay";
+  ov.style.cssText =
+    "display:block;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;";
+
+  const box = document.createElement("div");
+  box.className = "popup edit-popup";
+  // Alles inline, damit kein CSS-Class-Regelwerk dazwischenfunkt:
+  // volle Breite auf Mobile, scrollbar, immer sichtbar.
+  box.style.cssText =
+    "position:fixed;" +
+    "left:4%;right:4%;top:4vh;" +
+    "transform:none;" +                      // transform aus .popup-Klasse killen
+    "width:auto;max-width:none;" +
+    "max-height:92vh;overflow-y:auto;" +
+    "background:#fff;padding:16px;border-radius:12px;" +
+    "box-shadow:0 10px 40px rgba(0,0,0,0.35);" +
+    "z-index:1000;display:block;" +
+    "-webkit-overflow-scrolling:touch;";
+  // Klick außerhalb schließt - aber NICHT auf dem Popup selbst
   ov.onclick = () => { ov.remove(); box.remove(); };
-  const box = document.createElement("div"); box.className="popup";
+  box.onclick = ev => ev.stopPropagation();
   box.innerHTML = `
     <h3>✏️ Eintrag bearbeiten</h3>
     <div class="edit-row"><label>Erleger</label><input id="ed_name" value="${esc(d.name||"")}"></div>
@@ -938,6 +3318,13 @@ function openEdit(i) {
     <div class="edit-row"><label>Detail</label><input id="ed_wild" value="${esc(d.wild||"")}"></div>
     <div class="edit-row"><label>Gewicht (kg)</label><input id="ed_gew" type="number" min="0" max="200" value="${d.gewicht||""}"></div>
     <div class="edit-row"><label>Ort</label><input id="ed_ort" value="${esc(d.ort||"")}"></div>
+    <div class="edit-row">
+      <label>Standort (GPS)</label>
+      <div id="ed_latlng_display" style="font-size:12px;color:var(--grau);margin-bottom:4px;">
+        ${d.latlng ? (d.latlng.lat.toFixed(6) + ', ' + d.latlng.lng.toFixed(6)) : '<i>nicht gesetzt</i>'}
+      </div>
+      <button class="sm sec" onclick="openMapForEdit(${id})" style="margin:0;">🗺 Standort auf Karte ändern</button>
+    </div>
     <div class="edit-row"><label>Schusszeit</label><input id="ed_zeit" type="time" value="${d.zeit||""}"></div>
     <div class="edit-row"><label>Datum (Einlagerung)</label><input id="ed_datum" type="date" value="${d.datum||""}"></div>
     <div class="edit-row">
@@ -961,95 +3348,458 @@ function openEdit(i) {
         <option value="nein" ${abfV==="nein"?"selected":""}>Nein</option>
       </select>
     </div>
+    <div class="edit-row">
+      <label>Gemeldet (gesperrt)</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-weight:normal;">
+        <input id="ed_gem" type="checkbox" ${d.gemeldet ? "checked" : ""} style="width:auto;margin:0;">
+        🔒 als gemeldet sperren
+      </label>
+    </div>
+    <div class="edit-row">
+      <label>Fallwild</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-weight:normal;">
+        <input id="ed_fall" type="checkbox" ${d.ist_fallwild ? "checked" : ""} style="width:auto;margin:0;">
+        ☠ als Fallwild markieren (wird nicht im Abschussplan gezählt)
+      </label>
+    </div>
     <div style="margin-top:12px;display:flex;gap:8px;">
-      <button onclick="saveEdit(${i})" style="flex:1;">💾 Speichern</button>
+      <button onclick="saveEdit(${id})" style="flex:1;">💾 Speichern</button>
       <button class="sec" onclick="closePopups()" style="flex:1;">Abbrechen</button>
     </div>`;
   document.body.appendChild(ov); document.body.appendChild(box);
 }
 
-function saveEdit(i) {
-  const d = daten[i];
-  d.name = document.getElementById("ed_name").value.trim();
-  d.wildart = document.getElementById("ed_wildart").value.trim();
-  d.wild = document.getElementById("ed_wild").value.trim();
-  d.gewicht = document.getElementById("ed_gew").value;
-  d.ort = document.getElementById("ed_ort").value.trim();
-  d.zeit = document.getElementById("ed_zeit").value;
-  d.datum = document.getElementById("ed_datum").value;
-  d.entnommen = document.getElementById("ed_ent").value;
-  d.verwendung = document.getElementById("ed_verw").value;
+async function saveEdit(id) {
   const a = document.getElementById("ed_abf").value;
-  d.abfall = a==="" ? null : a;
-  speichern(); closePopups(); updateYearTabs(); anzeigen();
+  const gew = document.getElementById("ed_gew").value;
+  const body = {
+    name:       document.getElementById("ed_name").value.trim(),
+    wildart:    document.getElementById("ed_wildart").value.trim(),
+    wild:       document.getElementById("ed_wild").value.trim(),
+    gewicht:    gew === "" ? null : parseInt(gew, 10),
+    ort:        document.getElementById("ed_ort").value.trim(),
+    zeit:       document.getElementById("ed_zeit").value,
+    datum:      document.getElementById("ed_datum").value,
+    entnommen:  document.getElementById("ed_ent").value || null,
+    verwendung: document.getElementById("ed_verw").value,
+    abfall:       a === "" ? null : a,
+    gemeldet:     document.getElementById("ed_gem").checked ? 1 : 0,
+    ist_fallwild: document.getElementById("ed_fall").checked ? 1 : 0,
+  };
+  console.log('[Edit] saveEdit id=', id, 'body=', body);
+  try {
+    const row = await api.updateEintrag(id, body);
+    applyRow(row);
+    closePopups();
+    updateYearTabs();
+    anzeigen();
+  } catch (err) {
+    console.error('[Edit] saveEdit failed:', err);
+    if (String(err.message).includes('Nicht eingeloggt') ||
+        String(err.message).includes('Nur für Admin')) {
+      alert("Admin-Session abgelaufen. Bitte oben rechts neu einloggen.");
+      isAdmin = false;
+      applyConfig();
+    } else {
+      alert("Speichern fehlgeschlagen: " + err.message);
+    }
+  }
 }
 
 /* ============================================================
    ADMIN
    ============================================================ */
+/* ---------- Toast-Benachrichtigungen ---------- */
+function toast(msg, kind) {
+  const box = document.getElementById("toastBox");
+  if (!box) { alert(msg); return; }
+  const el = document.createElement("div");
+  el.className = "toast" + (kind ? " " + kind : "");
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = "opacity 0.3s";
+    el.style.opacity = "0";
+    setTimeout(() => el.remove(), 300);
+  }, 2800);
+}
+
+/* Kartenansicht: Kompakt ↔ Detail umschalten */
+function toggleCardExpand(cardEl) {
+  if (!cardEl) return;
+  // Nur kompakt-Karten sind klappbar
+  if (!cardEl.classList.contains("card-compact")) return;
+  cardEl.classList.toggle("expanded");
+}
+
+/* ---------- Bottom-Navigation ---------- */
+function bnGo(where) {
+  if (where === "start") {
+    zeigeSeite("start");
+  } else if (where === "revier") {
+    openRevierMode("revier");
+  } else if (where === "park") {
+    openRevierMode("park");
+  }
+  updateBottomNav();
+}
+
+function bnNewEntry() {
+  // Wenn wir nicht in Revier/Park sind, zuerst dorthin wechseln und
+  // dann den neuen Eintrag starten. Wenn bereits dort: direkt neuer Eintrag.
+  const startNew = () => { neuerEintrag(); };
+  const currentPage = document.querySelector(".page.active");
+  const pageId = currentPage ? currentPage.id : "";
+  if (pageId === "revier") {
+    startNew();
+  } else {
+    // Default: in den aktuellen appMode (oder Revier) wechseln
+    openRevierMode(appMode || "revier").then(startNew).catch(startNew);
+  }
+}
+
+function bnMore() {
+  const ov = document.createElement("div");
+  ov.style.cssText =
+    "position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:999;display:block;";
+  const box = document.createElement("div");
+  box.style.cssText =
+    "position:fixed;left:50%;bottom:100px;transform:translateX(-50%);" +
+    "background:#fff;padding:14px;border-radius:14px;" +
+    "box-shadow:0 10px 40px rgba(0,0,0,0.35);" +
+    "z-index:1000;display:flex;flex-direction:column;gap:6px;" +
+    "min-width:260px;max-width:92%;";
+  const close = () => { ov.remove(); box.remove(); };
+  ov.onclick = close;
+  box.onclick = ev => ev.stopPropagation();
+
+  // Karte und Plan brauchen einen Modus (Revier oder Park).
+  // Wir zeigen sie nur, wenn der User bereits in der Revier-Liste ist.
+  const currentPage = document.querySelector(".page.active");
+  const inRevier = currentPage && currentPage.id === "revier";
+
+  const items = [];
+  if (inRevier) {
+    items.push({ icon: "🗺", label: "Karte", action: () => { close(); openMapAll(); } });
+    if (config.planVisible !== false || isAdmin) {
+      items.push({ icon: "📋", label: "Plan", action: () => { close(); openPlanPopup(); } });
+    }
+  }
+  items.push({ icon: "❓", label: "Hilfe", action: () => { close(); openHelp(); } });
+  if (isAdmin) {
+    items.push({ icon: "⚙️", label: "Admin-Einstellungen", action: () => { close(); showLogin(); } });
+    items.push({ icon: "🔓", label: "Admin abmelden", action: () => { close(); adminLogoutFull(); } });
+  } else {
+    items.push({ icon: "🔐", label: "Admin-Login", action: () => { close(); showLogin(); } });
+  }
+  box.innerHTML = '<div style="font-size:13px;color:#666;margin-bottom:4px;text-align:center;">Mehr Aktionen</div>';
+  items.forEach(it => {
+    const b = document.createElement("button");
+    b.className = "sec";
+    b.style.cssText = "text-align:left;margin:0;display:flex;align-items:center;gap:10px;";
+    b.innerHTML = `<span style="font-size:20px;width:28px;text-align:center;">${it.icon}</span>${esc(it.label)}`;
+    b.onclick = it.action;
+    box.appendChild(b);
+  });
+  document.body.appendChild(ov);
+  document.body.appendChild(box);
+}
+
+/* Aktualisiert den aktiven Button der Bottom-Nav basierend auf
+   der aktuellen Seite + appMode. Blendet die Bottom-Nav während
+   des Workflow-Schritts aus (damit der FAB nicht mit dem Weiter-
+   Button konkurriert). */
+function updateBottomNav() {
+  const nav = document.getElementById("bottomNav");
+  if (!nav) return;
+  const currentPage = document.querySelector(".page.active");
+  const pageId = currentPage ? currentPage.id : "";
+  // Während des Workflows oder im Admin-Login die Bottom-Nav ausblenden
+  const hideOn = ["admin-login"];
+  const isWorkflow = pageId.startsWith("wf-");
+  const hidden = isWorkflow || hideOn.includes(pageId);
+  nav.style.display = hidden ? "none" : "flex";
+  document.body.classList.toggle("has-bottom-nav", !hidden);
+
+  // Floating FAB (Neuer Eintrag) nur in Revier/Park sichtbar.
+  const fab = document.getElementById("floatingFab");
+  if (fab) {
+    const showFab = (pageId === "revier");
+    fab.style.display = showFab ? "block" : "none";
+  }
+
+  // Aktiven Button markieren
+  nav.querySelectorAll("button[data-page]").forEach(btn => {
+    const p = btn.dataset.page;
+    let active = false;
+    if (p === "start")  active = (pageId === "start");
+    if (p === "revier") active = (pageId === "revier" && appMode !== "park");
+    if (p === "park")   active = (pageId === "revier" && appMode === "park");
+    btn.classList.toggle("active", active);
+  });
+  // Park-Button versteckt halten, wenn Admin ihn so konfiguriert hat
+  const parkBtn = nav.querySelector('button[data-page="park"]');
+  if (parkBtn) {
+    const parkVisible = (config.parkVisible !== false) || isAdmin;
+    parkBtn.style.display = parkVisible ? "" : "none";
+  }
+}
+
+function adminTab(id) {
+  document.querySelectorAll(".admin-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.tab === id)
+  );
+  document.querySelectorAll(".admin-tab-content").forEach(c =>
+    c.classList.toggle("active", c.id === id)
+  );
+}
+
 function showLogin() {
   if (isAdmin) {
     applyConfig();
     zeigeSeite("admin");
-    fillExportYears(); // HIER rein!
+    fillExportYears();
+    fillPlanYears();
+    fillMeldYears();
   } else {
     zeigeSeite("admin-login");
   }
 }
 
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById("adminUser").value.trim();
   const p = document.getElementById("adminPass").value;
-  if (u==="admin" && p===config.pass) { isAdmin=true; applyConfig(); zeigeSeite("admin"); }
-  else alert("Falsche Zugangsdaten!");
   document.getElementById("adminPass").value = "";
+  try {
+    const r = await api.login(u, p);
+    isAdmin = (r.rolle === 'admin');
+    currentUser = r.username;
+    applyConfig();
+    zeigeSeite("admin");
+    fillExportYears();
+    fillPlanYears();
+    fillMeldYears();
+    await reloadDaten();
+    anzeigen();
+  } catch (err) {
+    alert("Login fehlgeschlagen: " + err.message);
+  }
 }
 
-function adminLogout() { isAdmin=false; applyConfig(); anzeigen(); }
+async function adminLogout() {
+  try { await api.logout(); } catch (_) {}
+  isAdmin = false; currentUser = null;
+  applyConfig(); anzeigen();
+}
 function adminToRevier() { applyConfig(); anzeigen(); zeigeSeite("revier"); }
-function adminLogoutFull() { isAdmin=false; applyConfig(); anzeigen(); zeigeSeite("start"); }
-
-function saveConfig() {
-  config.revier = document.getElementById("cfgRevier").value.trim() || "Jagdrevier Prad";
-  config.code = document.getElementById("cfgCode").value.trim() || "1024";
-  config.mapUrl = document.getElementById("cfgMapUrl").value.trim() || config.mapUrl;
-  config.abfallText = document.getElementById("cfgAbfallText").value.trim() || "ACHTUNG: Abfall nur während Parkjagd.";
-  saveCfg(); applyConfig();
-  alert("Einstellungen gespeichert!");
+async function adminLogoutFull() {
+  try { await api.logout(); } catch (_) {}
+  isAdmin = false; currentUser = null;
+  applyConfig(); anzeigen(); zeigeSeite("start");
 }
 
-function changePassword() {
+async function saveConfig() {
+  config.revier       = document.getElementById("cfgRevier").value.trim() || "Jagdrevier Prad";
+  config.code         = document.getElementById("cfgCode").value.trim() || "1024";
+  config.abfallText   = document.getElementById("cfgAbfallText").value.trim() || "ACHTUNG: Abfall nur während Parkjagd.";
+  config.planVisible  = document.getElementById("cfgPlanVisible").checked;
+  config.cardsCompact = document.getElementById("cfgCardsCompact").checked;
+  config.parkVisible  = document.getElementById("cfgParkVisible").checked;
+  saveCfg();         // lokaler Cache
+  applyConfig();
+  anzeigen();        // Tabelle neu rendern, damit die Card-Darstellung wechselt
+  // Server-seitig speichern, damit die Werte für ALLE Geräte gelten
+  try {
+    await api.saveConfig({
+      revier:       config.revier,
+      code:         config.code,
+      abfallText:   config.abfallText,
+      planVisible:  config.planVisible  ? "1" : "0",
+      cardsCompact: config.cardsCompact ? "1" : "0",
+      parkVisible:  config.parkVisible  ? "1" : "0",
+    });
+    toast("✓ Einstellungen gespeichert");
+  } catch (err) {
+    toast("⚠ Lokal gespeichert, Server-Speichern fehlgeschlagen: " + err.message, "warn");
+  }
+}
+
+async function changePassword() {
   const np = document.getElementById("cfgNewPass").value;
-  if (!np || np.length<4) return alert("Passwort muss mind. 4 Zeichen haben!");
-  config.pass = np; saveCfg();
-  document.getElementById("cfgNewPass").value = "";
-  alert("Passwort geändert!");
+  if (!np || np.length < 4) return alert("Passwort muss mind. 4 Zeichen haben!");
+  const op = prompt("Aktuelles Passwort zur Bestätigung:");
+  if (!op) return;
+  try {
+    await api.changePassword(op, np);
+    document.getElementById("cfgNewPass").value = "";
+    toast("✓ Passwort geändert");
+  } catch (err) {
+    alert("Passwort-Wechsel fehlgeschlagen: " + err.message);
+  }
 }
 
-function clearYearData() {
-  if (!confirm("Alle Einträge von "+selectedYear+" wirklich löschen?")) return;
-  daten = daten.filter(d => !d.datum || new Date(d.datum).getFullYear()!==selectedYear);
-  speichern(); updateYearTabs(); anzeigen();
-  alert("Daten für "+selectedYear+" gelöscht.");
+/* ---------- Wetter via Open-Meteo (kostenlos, kein API-Key) ---------- */
+async function fetchWetterForEntry(id) {
+  const d = daten.find(x => x.id === id);
+  if (!d || !d.latlng || !d.datum || !d.zeit) return;
+  // Stunde aus der Schusszeit extrahieren (HH:MM -> HH)
+  const hh = parseInt(d.zeit.slice(0, 2), 10);
+  if (isNaN(hh)) return;
+
+  const url = 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude=' + encodeURIComponent(d.latlng.lat)
+    + '&longitude=' + encodeURIComponent(d.latlng.lng)
+    + '&hourly=temperature_2m,wind_speed_10m,precipitation,weather_code'
+    + '&start_date=' + d.datum + '&end_date=' + d.datum
+    + '&timezone=Europe%2FRome';
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const h = data.hourly || {};
+    if (!h.time || !h.time.length) return;
+
+    // Index finden, dessen Stunde zur Schusszeit passt
+    let idx = h.time.findIndex(t => t.endsWith('T' + String(hh).padStart(2,'0') + ':00'));
+    if (idx < 0) idx = 0;
+
+    const t  = Math.round((h.temperature_2m?.[idx] ?? 0) * 10) / 10;
+    const w  = Math.round((h.wind_speed_10m?.[idx] ?? 0));
+    const p  = h.precipitation?.[idx] ?? 0;
+    const wc = h.weather_code?.[idx];
+
+    const text = t + '°C · Wind ' + w + ' km/h'
+               + (p > 0 ? ' · Niederschlag ' + p + ' mm' : '')
+               + (wc != null ? ' · ' + wetterCodeText(wc) : '');
+
+    // Eintrag aktualisieren (kein Alarm wenn es scheitert)
+    try {
+      const row = await api.updateEintrag(id, { wetter: text });
+      applyRow(row);
+      anzeigen();
+    } catch (_) {}
+  } catch (_) {
+    // Wetter nicht essenziell - Fehler still schlucken
+  }
 }
 
-function clearAllData() {
-  if (!confirm("ALLE Daten unwiderruflich löschen?")) return;
-  if (!confirm("Wirklich ALLE? Nicht rückgängig!")) return;
-  daten=[]; speichern(); updateYearTabs(); anzeigen();
-  alert("Alle Daten gelöscht.");
+function wetterCodeText(c) {
+  // Open-Meteo WMO-Codes, grob übersetzt
+  if (c === 0) return 'klar';
+  if (c === 1 || c === 2) return 'leicht bewölkt';
+  if (c === 3) return 'bedeckt';
+  if (c >= 45 && c <= 48) return 'Nebel';
+  if (c >= 51 && c <= 57) return 'Nieselregen';
+  if (c >= 61 && c <= 65) return 'Regen';
+  if (c >= 66 && c <= 67) return 'gefrierender Regen';
+  if (c >= 71 && c <= 77) return 'Schnee';
+  if (c >= 80 && c <= 82) return 'Regenschauer';
+  if (c >= 85 && c <= 86) return 'Schneeschauer';
+  if (c >= 95) return 'Gewitter';
+  return '';
 }
 
-/* ---------- Export / Import ---------- */
+/* ---------- Druckansicht (für amtliche Abschussmeldung) ---------- */
+function openPrintView() {
+  if (!isAdmin) return alert("Nur der Admin kann drucken.");
+  const year = parseInt(document.getElementById("exportYear").value, 10) || selectedYear;
+  const kontext = document.getElementById("exportKontext").value || "revier";
+  const isPark = kontext === "park";
+  const rows = daten
+    .filter(d => d.datum && new Date(d.datum).getFullYear() === year && !!d.ist_park === isPark)
+    .sort((a,b) => (a.datum||'').localeCompare(b.datum||''));
+
+  document.getElementById("druckSubtitle").textContent =
+    (isPark ? "🌲 Park · " : "🎯 Revier · ")
+    + "Jagdjahr " + year + " · " + rows.length + " Einträge · Stand "
+    + formatDatum(new Date().toISOString().slice(0,10));
+
+  const tbody = document.querySelector("#druckTabelle tbody");
+  tbody.innerHTML = rows.map((d, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${esc(d.name || "")}</td>
+      <td>${esc(d.wildart || "")}</td>
+      <td>${esc(d.wild || "")}</td>
+      <td>${d.gewicht || ""}</td>
+      <td>${esc(d.ort || "")}</td>
+      <td>${esc(d.zeit || "")}</td>
+      <td>${formatDatum(d.datum)}</td>
+      <td>${formatDatum(d.entnommen)}</td>
+      <td>${esc(d.verwendung || "")}</td>
+      <td>${d.abfall === "ja" ? "Ja" : d.abfall === "nein" ? "Nein" : ""}</td>
+      <td>${d.gemeldet ? "✓" : ""}</td>
+    </tr>
+  `).join("");
+
+  // window.print() triggert den Druck-Dialog. @media print in CSS
+  // blendet alles außer #druckview aus.
+  window.print();
+}
+
+/* ---------- Export (CSV für Jahresmeldung) ---------- */
+/* ---------- Backup ---------- */
+function downloadBackup() {
+  if (!isAdmin) return toast("Nur Admin", "err");
+  // Einfach: neuer Tab auf die URL - der Server liefert mit
+  // Content-Disposition: attachment einen Datei-Download aus.
+  window.location.href = "api/backup.php";
+}
+
+function uploadBackup(ev) {
+  const f = ev.target.files[0];
+  if (!f) return;
+  if (!isAdmin) { toast("Nur Admin", "err"); return; }
+  if (!confirm(
+    "ACHTUNG: Der aktuelle Datenbestand wird komplett überschrieben.\n" +
+    "Hast du vorher ein aktuelles Backup heruntergeladen?\n\n" +
+    "Mit OK wirklich einspielen."
+  )) {
+    ev.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const body = JSON.parse(reader.result);
+      const res = await fetch("api/backup.php", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || ("HTTP " + res.status));
+      }
+      toast("✓ Backup eingespielt: " + (data.data.eintraege || 0) + " Einträge");
+      await reloadDaten();
+      abschussplan = {};  // Plan-Cache leeren, wird neu geladen
+      await ensurePlan(selectedYear);
+      updateYearTabs();
+      anzeigen();
+    } catch (err) {
+      alert("Einspielen fehlgeschlagen: " + err.message);
+    }
+    ev.target.value = "";
+  };
+  reader.readAsText(f);
+}
+
 function exportExcel() {
   const year = document.getElementById("exportYear").value;
+  const kontext = document.getElementById("exportKontext").value || "revier";
+  const isPark = kontext === "park";
 
   const data = daten.filter(d =>
-    d.datum && new Date(d.datum).getFullYear() == year
+    d.datum &&
+    new Date(d.datum).getFullYear() == year &&
+    (!!d.ist_park === isPark)
   );
 
   if (!data.length) {
-    alert("Keine Daten für dieses Jahr!");
+    alert("Keine Daten für " + (isPark ? "Park" : "Revier") + " im Jahr " + year + "!");
     return;
   }
 
@@ -1073,25 +3823,10 @@ function exportExcel() {
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "abschussliste_" + year + ".csv";
+  a.download = "abschussliste_" + (isPark ? "park_" : "revier_") + year + ".csv";
   a.click();
 
   URL.revokeObjectURL(url);
-}
-
-function importJSON(ev) {
-  const f = ev.target.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = () => {
-    try {
-      const p = JSON.parse(r.result);
-      if (!Array.isArray(p)) throw new Error("Kein Array");
-      if (!confirm("Import ersetzt aktuelle Liste. Fortfahren?")) return;
-      daten=p; speichern(); updateYearTabs(); anzeigen();
-      alert("Import: "+daten.length+" Einträge.");
-    } catch(e) { alert("Fehler: "+e.message); }
-  };
-  r.readAsText(f); ev.target.value="";
 }
 
 /* ---------- Auto-Advance ---------- */
@@ -1099,8 +3834,11 @@ document.getElementById("inputZeit").addEventListener("change", () => setTimeout
 document.getElementById("inputDatum").addEventListener("change", () => setTimeout(nextVerwendung, 300));
 
 /* ---------- Start ---------- */
-init();
-fillExportYears();
+init().catch(err => {
+  console.error(err);
+  alert("Start fehlgeschlagen: " + err.message +
+        "\nPrüfe, ob api/config.php existiert und die DB erreichbar ist.");
+});
 </script>
 </body>
 </html>
